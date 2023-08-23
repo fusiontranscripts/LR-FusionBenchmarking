@@ -60,8 +60,6 @@ sub parse_fusion_result_file {
 
         my $splice_type = $row->{SpliceType};
         
-        unless ($splice_type eq "ONLY_REF_SPLICE") { next; } # otherwise, too many assembly artifacts
-        
         my $chr_coords_A = $row->{LeftBreakpoint};
         my $chr_coords_B = $row->{RightBreakpoint};
         
