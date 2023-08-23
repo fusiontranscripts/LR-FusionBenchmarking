@@ -58,8 +58,6 @@ sub parse_fusion_result_file {
         
         if ($fusion_gene_A eq $fusion_gene_B) { next; } # no self-fusions
 
-        my $splice_type = $row->{SpliceType};
-        
         my $chr_coords_A = $row->{LeftBreakpoint};
         my $chr_coords_B = $row->{RightBreakpoint};
         
