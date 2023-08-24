@@ -29,9 +29,13 @@ all_data = full_join(PR_AUC_file_listing, all_data, by='filename')
 all_data = all_data %>% select(-filename)
 
 
+
 ranked_progs = all_data %>% group_by(prog) %>% summarize(mean_AUC = mean(AUC)) %>% arrange(mean_AUC) %>% pull(prog)
 
 all_data$prog = factor(all_data$prog, levels=ranked_progs)
+
+write.table(all_data, file="combined_results.PR_AUC.tsv", quote=F, sep="\t", row.names=F)
+
 
 p = all_data %>% ggplot(aes(x=prog, y=AUC)) + geom_col(aes(fill=prog)) + 
  facet_grid(seqtype ~ divergence) +
