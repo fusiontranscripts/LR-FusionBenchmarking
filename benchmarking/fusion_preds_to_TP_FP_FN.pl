@@ -2,6 +2,10 @@
 
 use strict;
 use warnings;
+use FindBin;
+use lib ("$FindBin::Bin/../PerlLib");
+use DelimParser;
+use Carp;
 
 use Getopt::Long qw(:config posix_default no_ignore_case bundling pass_through);
 
@@ -91,25 +95,37 @@ if ($ALLOW_PARALOGS) {
 
 
 main : {
-    
+
     my %prog_names;
-    # print header
-    print join("\t", "pred_result", "sample", "prog", "fusion", "J", "S", 
-               "mapped_gencode_A_gene_list", "mapped_gencode_B_gene_list", 
-               "explanation", "selected_fusion") . "\n";
     
     open (my $fh, $fusion_preds_file) or die "Error, cannot open file $fusion_preds_file";
-    my $header = <$fh>;
-    unless ($header =~ /^sample/) {
-        die "Error, didn't parse expected header of file: $fusion_preds_file";
-    }
-    while (<$fh>) {
-        chomp;
-        if (/^\#/) { next; }
-        my @x = split(/\t/);
+    
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
+    my @column_headers = $delim_parser->get_column_headers();
+    
+    
+    my $delim_writer = new DelimParser::Writer(*STDOUT, "\t", ['pred_class', @column_headers, 'selected_fusion', 'explanation']);
+    
+    my $sample_name;
+
+    while (my $row = $delim_parser->get_row()) {
         
-        my ($sample, $prog_name, $fusion_name, $J, $S, $mapped_A_list, $mapped_B_list, @rest) = @x;
+        if ($sample_name) {
+            if ($sample_name ne $row->{sample}) {
+                confess "Error, mixed sample names in predictions file: $sample_name vs. $row->{sample}";
+            }
+        }
+        else {
+            $sample_name = $row->{sample};
+        }
         
+        my $prog_name = $row->{prog};
+        my $fusion_name = $row->{fusion};
+        my $num_reads = $row->{num_reads};
+        my $mapped_A_list = $row->{mapped_gencode_A_gene_list};
+        my $mapped_B_list = $row->{mapped_gencode_B_gene_list};
+        
+                
         ## ensure everything is being compared in a case-insensitive manner.
         $fusion_name = uc $fusion_name;
 
@@ -134,14 +150,18 @@ main : {
             }
         }
         
-        my ($pred_result, $explanation, $fusion_selected) = &classify_fusion_prediction($sample, $prog_name, \@partnersA, \@partnersB);
+        my ($pred_result, $explanation, $fusion_selected) = &classify_fusion_prediction($prog_name, \@partnersA, \@partnersB);
 
         unless ($fusion_selected) {
             $fusion_selected = ".";
         }
-        
-        print join("\t", $pred_result, $sample, $prog_name, $fusion_name, $J, $S, $mapped_A_list, $mapped_B_list, $explanation, $fusion_selected) . "\n";
-                
+    
+        $row->{pred_class} = $pred_result;
+        $row->{selected_fusion} = $fusion_selected;
+        $row->{explanation} = $explanation;
+
+        $delim_writer->write_row($row);
+                        
     }
 
     
@@ -151,10 +171,23 @@ main : {
         foreach my $fusion_name (keys %TP_fusions) {
             if (! $seen_progTP{"$prog_name,$fusion_name"}) {
 
-                my ($sample_name, $geneA, $geneB) = &decode_fusion($fusion_name);
+                my ($geneA, $geneB) = &decode_fusion($fusion_name);
                 my $core_fusion_name = join("--", $geneA, $geneB);
                 
-                print join("\t", "FN", $sample_name, $prog_name, $core_fusion_name, 0, 0, '.', '.', 'prediction_lacking', '.') . "\n";
+                my $row = { 'pred_class' => "FN",
+                            'sample' => $sample_name,
+                            'prog' => $prog_name,
+                            'fusion' => $core_fusion_name,
+                            'breakpoint' => "NA", # add this later.
+                            'num_reads' => 0,
+                            'mapped_gencode_A_gene_list' => '.',
+                            'mapped_gencode_B_gene_list' => '.',
+                            'annots' => '.',
+                            'selected_fusion' => '.',
+                            'explanation' => 'prediction_lacking' 
+                };
+                
+                $delim_writer->write_row($row);
                 
             }
         }
@@ -168,7 +201,7 @@ main : {
 
 ####
 sub classify_fusion_prediction {
-    my ($sample, $prog_name, $partnerA_aref, $partnerB_aref) = @_;
+    my ($prog_name, $partnerA_aref, $partnerB_aref) = @_;
    
     my @fusion_candidates;
 
@@ -178,8 +211,8 @@ sub classify_fusion_prediction {
     foreach my $partnerA (@$partnerA_aref) {
         foreach my $partnerB (@$partnerB_aref) {
             
-            my $fusion_candidate = &encode_fusion($sample, $partnerA, $partnerB);
-
+            my $fusion_candidate = &encode_fusion($partnerA, $partnerB);
+            
             #note, the primary A--B will show up first in the list.
             unless ($primary_fusion_name) {
                 $primary_fusion_name = $fusion_candidate;
@@ -188,13 +221,14 @@ sub classify_fusion_prediction {
             push (@fusion_candidates, $fusion_candidate);
 
             if ($ALLOW_REVERSE_FUSION) {
-                my $fusion_candidate = &encode_fusion($sample, $partnerB, $partnerA);
+                my $fusion_candidate = &encode_fusion($partnerB, $partnerA);
                 push (@fusion_candidates, $fusion_candidate);
             }
             
         }
     }
     
+
 
     my ($accuracy_token, $accuracy_explanation, $fusion_selected); 
 
@@ -276,6 +310,14 @@ sub classify_fusion_prediction {
     unless ($accuracy_token) {
         # must be a FP
         $accuracy_token = "FP";
+        
+        if (! defined $prog_name ) {
+            confess "Error, no prog_name defined";
+        }
+        if (! defined $primary_fusion_name) {
+            confess "Error, no primary fusion name defined";
+        }
+        
         my $prog_fusion = "$prog_name,$primary_fusion_name";
         $accuracy_explanation = "first encounter of FP fusion $prog_fusion";
         $FP_progFusions{$prog_fusion} = 1;
@@ -294,22 +336,16 @@ sub parse_fusion_listing {
     my %fusions;
     
     open (my $fh, $fusions_file) or die "Error, cannot open file $fusions_file";
-    while (<$fh>) {
-        unless (/\w/) { next; }
-        chomp;
-        my $fusion = $_;
-        if ($fusion =~ /^(\S+)\|(\S+)--(\S+)$/) {
-            my $sample = $1;
-            my $geneA = uc $2;  # case insensitive comparisons
-            my $geneB = uc $3;  # case insensitive comparisons
-            $fusions{"$sample|$geneA--$geneB"} = 1;
-        }
-        else {
-            die "Error, cannot parse fusion: $fusion as samplename|fusionA--fusionB";
-        }
+    
+    my $delim_reader = new DelimParser::Reader($fh, "\t");
+    
+    while(my $row = $delim_reader->get_row()) {
+        my $fusion = $row->{fusion} || $row->{fusion_name};
+        $fusion = uc $fusion;
+        $fusions{$fusion} = 1;
     }
     close $fh;
-
+    
     return(%fusions);
 
 }
@@ -339,8 +375,7 @@ sub parse_paralogs_integrate_parafusions {
 
     my @orig_fusions = keys %$orig_fusions_href;
 
-    foreach my $orig_fusion (@orig_fusions) {
-        my ($sample, $orig_fusion_name) = split(/\|/, $orig_fusion);
+    foreach my $orig_fusion_name (@orig_fusions) {
         my ($geneA, $geneB) = split(/--/, $orig_fusion_name);
         
         my @paraA = ($geneA);
@@ -355,9 +390,9 @@ sub parse_paralogs_integrate_parafusions {
         foreach my $gA (@paraA) {
             foreach my $gB (@paraB) {
 
-                my $para_fusion = "$sample|$gA--$gB";
+                my $para_fusion = "$gA--$gB";
                 
-                $paralog_fusion_to_orig_fusion{$para_fusion} = $orig_fusion;
+                $paralog_fusion_to_orig_fusion{$para_fusion} = $orig_fusion_name;
             }
         }
     }
@@ -369,9 +404,9 @@ sub parse_paralogs_integrate_parafusions {
 
 ####
 sub encode_fusion {
-    my ($sample, $geneA, $geneB) = @_;
+    my ($geneA, $geneB) = @_;
 
-    my $fusion_name = "$sample|$geneA--$geneB";
+    my $fusion_name = "$geneA--$geneB";
 
     return($fusion_name);
 }
@@ -380,11 +415,9 @@ sub encode_fusion {
 sub decode_fusion {
     my ($fusion_name) = @_;
 
-    $fusion_name =~ /^([^\|]+)\|(\S+)--(\S+)$/ or die "Error, cannot decode fusion: $fusion_name";
-
-    my ($sample, $geneA, $geneB) = ($1, $2, $3);
-
-    return($sample, $geneA, $geneB);
+    my ($geneA, $geneB) = split(/--/, $fusion_name);
+    
+    return($geneA, $geneB);
 
 }
 

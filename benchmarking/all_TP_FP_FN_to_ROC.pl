@@ -2,7 +2,10 @@
 
 use strict;
 use warnings;
-
+use FindBin;
+use lib("$FindBin::Bin/../PerlLib");
+use DelimParser;
+use Data::Dumper;
 
 my $usage = "\n\n\tusage: $0 summary.TP_FP_FN\n\n";
 
@@ -22,7 +25,6 @@ main: {
     
     exit(0);
 }
-
 
 ####
 sub make_ROC {
@@ -83,22 +85,19 @@ sub parse_file {
     my %seen;
     
     open (my $fh, $fusions_file) or die $!;
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
     
-    my $header = <$fh>;
-    unless ($header =~ /^pred_result/) {
-        die "Error, not reading expected header format for $fusions_file";
-    }
-    while (<$fh>) {
-        chomp;
-        my @x = split(/\t/);
-        unless (scalar @x == 10) {
-            die "Error, did not parse 10 fields from row: $_";
-        }
-        my ($pred_type, $sample_name, $progname, $fusion, $J, $S, 
-            $mapped_gencode_A, $mapped_gencode_B, $explanation, $selected_fusion) = @x;
+    while(my $row = $delim_parser->get_row()) {
         
+        my $pred_type = $row->{pred_class};
         unless ($pred_type =~ /^(TP|FP|FN)$/) { next; }
-                
+        
+        my $sample_name = $row->{sample};
+        my $progname = $row->{prog};
+        
+        my $fusion = $row->{fusion};
+        my $selected_fusion = $row->{selected_fusion};
+        
         if ($selected_fusion ne '.') {
             $fusion = $selected_fusion;
         }
@@ -106,13 +105,15 @@ sub parse_file {
         my $fusion_token = join("::", $progname, $sample_name, $fusion);
         
         if ($seen{$fusion_token}) {
-            die "Error, already processed fusion [$fusion_token], and these should be unique entries in this file $fusions_file";
+            die "Error, already processed fusion [$fusion_token], and these should be unique entries in this file $fusions_file\n"
+                . "Earlier: " . Dumper($seen{$fusion_token}) . "\n"
+                . "Now: " . Dumper($row);
         }
-        $seen{$fusion_token} = 1 ;
+        $seen{$fusion_token} = $row;
         
-        my $val = $J + $S;
+        my $num_reads = $row->{num_reads};
         
-        push (@{$data{$progname}->{$pred_type}}, $val);
+        push (@{$data{$progname}->{$pred_type}}, $num_reads);
     }
     close $fh;
     

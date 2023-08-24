@@ -9,6 +9,8 @@ use File::Basename;
 use lib ("$FindBin::Bin/../../PerlLib");
 use Pipeliner;
 use Process_cmd;
+use DelimParser;
+use Data::Dumper;
 
 unless ($ENV{FUSION_ANNOTATOR}) {
 
@@ -34,6 +36,11 @@ my $benchmark_data_basedir = "$FindBin::Bin/../../";
 my $benchmark_toolkit_basedir = "$FindBin::Bin/../../benchmarking";
 my $fusion_annotator_basedir = $ENV{FUSION_ANNOTATOR};
 my $trinity_home = $ENV{TRINITY_HOME};
+
+
+my $sim_truth_set = "$FindBin::Bin/jaffal_sim_truth_set.tsv";
+
+my $restrict_progs_file = $ARGV[0] || "";
 
 
 main: {
@@ -69,43 +76,44 @@ main: {
     ##################################
     ######  Scoring of fusions #######
     
+    my $sample_to_truth_href = &parse_truth_set($sim_truth_set);
+    
+    my ($sample_to_fusion_preds_href, $column_headers_aref) = &parse_fusion_preds("preds.collected.gencode_mapped.wAnnot.filt");
+    
     # score strictly
-    &score_and_plot("preds.collected.gencode_mapped.wAnnot.filt", 
-                    $sim_truth_set, 
-                    $sim_fusion_TPM_values,
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
                     'analyze_strict', 
-                    { allow_reverse_fusion => 0, allow_paralogs => 0 } );
+                    { allow_reverse_fusion => 0, allow_paralogs => 0 },
+                    $column_headers_aref);
     
     # score allow reverse fusion
-    &score_and_plot_replicates("preds.collected.gencode_mapped.wAnnot.filt", 
-                               $sim_truth_set, 
-                               $sim_fusion_TPM_values,
-                               'analyze_allow_reverse', 
-                               { allow_reverse_fusion => 1, allow_paralogs => 0 } );
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
+                    'analyze_allow_reverse', 
+                    { allow_reverse_fusion => 1, allow_paralogs => 0 },
+                    $column_headers_aref);
 
     # score allow reverse and allow for paralog-equivalence
-    &score_and_plot_replicates("preds.collected.gencode_mapped.wAnnot.filt", 
-                               $sim_truth_set, 
-                               $sim_fusion_TPM_values,
-                               'analyze_allow_rev_and_paralogs', 
-                               { allow_reverse_fusion => 1, allow_paralogs => 1 } );
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
+                    'analyze_allow_rev_and_paralogs', 
+                    { allow_reverse_fusion => 1, allow_paralogs => 1 },
+                    $column_headers_aref);
     
 
 
-
+    
     ## Compare TP and FP before and after paralog-equiv
-
-    $cmd = "$benchmark_toolkit_basedir/plotters/plot_before_vs_after_filt_TP_FP_compare.Rscript "
-        . " __analyze_allow_reverse/all.scored.preds.ROC.best.dat "
-        . " __analyze_allow_rev_and_paralogs/all.scored.preds.ROC.best.dat ";
+    #
+    #$cmd = "$benchmark_toolkit_basedir/plotters/plot_before_vs_after_filt_TP_FP_compare.Rscript "
+    #    . " __analyze_allow_reverse/all.scored.preds.ROC.best.dat "
+    #    . " __analyze_allow_rev_and_paralogs/all.scored.preds.ROC.best.dat ";
+    # 
+    #$pipeliner->add_commands(new Command($cmd, "before_vs_after_okPara.ok"));
+    #
+    #$pipeliner->run();
     
-    $pipeliner->add_commands(new Command($cmd, "before_vs_after_okPara.ok"));
-
-    $pipeliner->run();
-    
-
-    
-
     
     exit(0);
     
@@ -114,11 +122,9 @@ main: {
 
 
 ####
-sub score_and_plot_replicates {
-    my ($input_file, $truth_set, $fusion_TPMs, $analysis_token, $analysis_settings_href, ) = @_;
+sub score_and_plot {
+    my ($sample_to_fusion_preds_href, $truth_set_href, $analysis_token, $analysis_settings_href, $column_headers_aref) = @_;
     
-    $input_file = &ensure_full_path($input_file); # the predictions
-        
     my $base_workdir = cwd();
 
     my $workdir = "__" . "$analysis_token";
@@ -129,58 +135,67 @@ sub score_and_plot_replicates {
     chdir ($workdir) or die "Error, cannot cd to $workdir";
     
     
-    my %sample_to_truth = &parse_truth_set($truth_set);
-
-    my $preds_header = "";
-    my %sample_to_fusion_preds = &parse_fusion_preds($input_file, \$preds_header); # updates hte preds_header value to header of file.
-    
-
     ####################################
     ## Examine each replicate separately
     
-    foreach my $sample_type (keys %sample_to_truth) {
+    #print Dumper($truth_set_href);
+    #die;
+
+    foreach my $sample_type (keys %$truth_set_href) {
         my $sample_checkpoint = "$sample_type.ok";
         if (! -e $sample_checkpoint) {
-            &examine_sample($sample_type, $sample_to_truth{$sample_type}, $sample_to_fusion_preds{$sample_type}, $analysis_settings_href, $preds_header);
+            &examine_sample($sample_type, $truth_set_href->{$sample_type}, $sample_to_fusion_preds_href->{$sample_type}, $analysis_settings_href, $column_headers_aref);
             &process_cmd("touch $sample_checkpoint");
         }
     }
     
 
-    ######################################
-    ## generate summary accuracy box plots
-    
     my $pipeliner = &init_pipeliner();
 
-    my $cmd = 'find . -regex ".*.scored.PR.AUC" -exec cat {} \\; > all.AUC.dat';
-    $pipeliner->add_commands(new Command($cmd, "gather_AUC.ok"));
+    my $cmd = 'find . -regex ".*fusion_preds.txt.scored.ROC"  >  ROC.files.list';
+    $pipeliner->add_commands(new Command($cmd, "gather.ROC.files.ok"));
+
+    $cmd = 'find . -regex ".*fusion_preds.txt.scored.PR.AUC"  >  PR.AUC.files.list';
+    $pipeliner->add_commands(new Command($cmd, "gather.PR.AUC.files.ok"));
     
-    $cmd = "$benchmark_toolkit_basedir/plotters/AUC_boxplot.from_single_summary_AUC_file.Rscript all.AUC.dat";
-    $pipeliner->add_commands(new Command($cmd, "boxplot_rep_aucs.ok"));
-
-    $cmd = 'find . -regex ".*.scored" -exec cat {} \\; > all.scored.preds';
-    $pipeliner->add_commands(new Command($cmd, "gather_scores.ok"));
-
     $pipeliner->run();
 
     
-    &ROC_and_PR("all.scored.preds");
+
+    ######################################
+    ## generate summary accuracy box plots
+    
+    # my $pipeliner = &init_pipeliner();
+    # 
+    # my $cmd = 'find . -regex ".*.scored.PR.AUC" -exec cat {} \\; > all.AUC.dat';
+    # $pipeliner->add_commands(new Command($cmd, "gather_AUC.ok"));
+    #
+    # $cmd = "$benchmark_toolkit_basedir/plotters/AUC_boxplot.from_single_summary_AUC_file.Rscript all.AUC.dat";
+    # $pipeliner->add_commands(new Command($cmd, "boxplot_rep_aucs.ok"));
+    # 
+    # $cmd = 'find . -regex ".*.scored" -exec cat {} \\; > all.scored.preds';
+    # $pipeliner->add_commands(new Command($cmd, "gather_scores.ok"));
+    # 
+    # $pipeliner->run();
+    
+    
+    # &ROC_and_PR("all.scored.preds");
         
     # examine sensitivity vs. expression level
 
-    if ($fusion_TPMs) {
-        $cmd = "$benchmark_toolkit_basedir/fusion_preds_sensitivity_vs_expr.avg_replicates.pl all.scored.preds $fusion_TPMs > all.scored.preds.sensitivity_vs_expr.dat";
-        $pipeliner->add_commands(new Command($cmd, "sens_vs_expr.avg_reps.ok"));
-        
-        $cmd = "$trinity_home/Analysis/DifferentialExpression/PtR  "
-            . " -m all.scored.preds.sensitivity_vs_expr.dat "
-            . " --heatmap "
-            . " --sample_clust none --gene_clust ward "
-            . " --heatmap_colorscheme 'black,purple,yellow'";
-        $pipeliner->add_commands(new Command($cmd, "sens_expr_heatmap.ok"));
-        
-        $pipeliner->run();
-    }
+    #if ($fusion_TPMs) {
+    #    $cmd = "$benchmark_toolkit_basedir/fusion_preds_sensitivity_vs_expr.avg_replicates.pl all.scored.preds $fusion_TPMs > all.scored.preds.sensitivity_vs_expr.dat";
+    #    $pipeliner->add_commands(new Command($cmd, "sens_vs_expr.avg_reps.ok"));
+    #    
+    #    $cmd = "$trinity_home/Analysis/DifferentialExpression/PtR  "
+    #        . " -m all.scored.preds.sensitivity_vs_expr.dat "
+    #        . " --heatmap "
+    #        . " --sample_clust none --gene_clust ward "
+    #        . " --heatmap_colorscheme 'black,purple,yellow'";
+    #    $pipeliner->add_commands(new Command($cmd, "sens_expr_heatmap.ok"));
+    #    
+    #    $pipeliner->run();
+    #}
 
     
     chdir $base_workdir or die "Error, cannot cd back to $base_workdir";
@@ -190,8 +205,8 @@ sub score_and_plot_replicates {
     
 ####
 sub examine_sample {
-    my ($sample_type, $sample_truth_href, $sample_to_fusion_preds_text, $analysis_settings_href, $preds_header) = @_;
-
+    my ($sample_type, $sample_truth_href, $fusion_prog_to_preds_href, $analysis_settings_href, $column_headers_aref) = @_;
+    
     my $basedir = cwd();
 
     my $sample_dir = "$sample_type";
@@ -207,23 +222,33 @@ sub examine_sample {
     
     if (! -e $prep_inputs_checkpoint) {
         {
-            my @TP_fusions = keys %{$sample_truth_href};
+            my @TP_fusions = keys %$sample_truth_href;
             
             open (my $ofh, ">$sample_TP_fusions_file") or die "Error, cannot write to $sample_TP_fusions_file";
-            print $ofh join("\n", @TP_fusions) . "\n";
+            print $ofh "fusion_name\tnum_reads\n";
+            foreach my $fusion (@TP_fusions) {
+                my $num_reads = $sample_truth_href->{$fusion};
+                print $ofh join("\t", $fusion, $num_reads) . "\n";
+            }
             close $ofh;
         }
-                
+        
         {
             open (my $ofh, ">$fusion_preds_file") or die "Error, cannot write to $fusion_preds_file";
-            print $ofh $preds_header;
-            print $ofh $sample_to_fusion_preds_text;
+            my $delim_writer = new DelimParser::Writer($ofh, "\t", $column_headers_aref);
+            
+            foreach my $prog (keys %$fusion_prog_to_preds_href) {
+                my @rows = @{$fusion_prog_to_preds_href->{$prog}};
+                foreach my $row (@rows) {
+                    $delim_writer->write_row($row);
+                }
+            }
             close $ofh;
         }
     
         &process_cmd("touch $prep_inputs_checkpoint");
     }
-
+    
     ##################
     # score TP, FP, FN
 
@@ -239,6 +264,9 @@ sub examine_sample {
     }
 
     $cmd .= " > $fusion_preds_file.scored";
+
+    #print $cmd;
+    #die;
 
     $pipeliner->add_commands(new Command($cmd, "tp_fp_fn.ok"));
     
@@ -301,6 +329,8 @@ sub ROC_and_PR {
 
     $pipeliner->run();
 
+    #die "DEBUGGING";
+    
     return;
         
 }
@@ -311,17 +341,17 @@ sub parse_truth_set {
     my %sample_to_truth;
 
     open(my $fh, $tp_fusions_file) or die "Error, cannot open file $tp_fusions_file";
+    my $header = <$fh>;
     while (<$fh>) {
         chomp;
-        my $full_fusion_name = $_;
-
-        my ($sample_name, $core_fusion_name) = split(/\|/, $full_fusion_name);
-
-        $sample_to_truth{$sample_name}->{$full_fusion_name} = 1;
+        
+        my ($sample_name, $fusion_name, $num_reads) = split(/\t/);
+        
+        $sample_to_truth{$sample_name}->{$fusion_name} = $num_reads;
     }
     close $fh;
 
-    return(%sample_to_truth);
+    return(\%sample_to_truth);
 
 }
 
@@ -330,25 +360,22 @@ sub parse_truth_set {
 sub parse_fusion_preds {
     my ($preds_file, $preds_header_sref) = @_;
 
+    open(my $fh, $preds_file) or die "Error, cannot open file: $preds_file";
+    
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
+
+    my @column_headers = $delim_parser->get_column_headers();
+
     my %sample_to_preds;
-    {
-        open (my $fh, $preds_file) or confess "Error, cannot open file $preds_file";
-        my $header = <$fh>;
-        unless ($header =~ /^sample/) {
-            confess "Error, didn't parse expected header from file: $preds_file";
-        }
-        $$preds_header_sref = $header;
+    
+    while(my $row = $delim_parser->get_row()) {
         
-        while (<$fh>) {
-            my $line = $_;
-            my @x = split(/\t/);
-            my $sample_name = $x[0];
-            $sample_to_preds{$sample_name} .= $line;
-        }
-        close $fh;
+        my $sample_name = $row->{sample};
+        my $prog = $row->{prog};
+        push (@{$sample_to_preds{$sample_name}->{$prog}}, $row);
     }
 
-    return(%sample_to_preds);
+    return(\%sample_to_preds, \@column_headers);
 }
 
 
