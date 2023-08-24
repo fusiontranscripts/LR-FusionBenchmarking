@@ -31,7 +31,7 @@ sub parse_fusion_result_file {
     my ($file) = @_;
 
 
-    my $fh = open($file) or die "Error, cannot open file: $file";
+    open(my $fh, $file) or die "Error, cannot open file: $file";
     my $delim_parser = new DelimParser::Reader($fh, "\t");
 
     my @fusions;
@@ -56,8 +56,8 @@ sub parse_fusion_result_file {
         my $chrB = $chr_coords_B_vals[2];
         my $coordB = $chr_coords_B_vals[3];
         
-        my $num_reads = $row->{spanning reads};
-                
+        my $num_reads = $row->{'spanning reads'};
+        
         my $struct = {
         
             geneA => $fusion_gene_A,

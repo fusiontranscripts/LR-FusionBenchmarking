@@ -45,14 +45,14 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "fusion_file_listing.ok"));
     
     # collect predictions
-    $cmd = "$benchmark_toolkit_basedir/collect_preds.pl fusion_result_file_listing.dat > preds.collected";
+    $cmd = "./util/collect_LR_preds.pl fusion_result_file_listing.dat > preds.collected";
     $pipeliner->add_commands(new Command($cmd, "collect_preds.ok"));
 
     # map fusion predictions to gencode gene symbols based on identifiers or chromosomal coordinates.
     $cmd = "$benchmark_toolkit_basedir/map_gene_symbols_to_gencode.pl "
         . " preds.collected "
         . " $benchmark_data_basedir/resources/genes.coords.gz "
-        . " $benchmark_data_basedir/resources/genes.aliases "
+        #. " $benchmark_data_basedir/resources/genes.aliases "
         . " > preds.collected.gencode_mapped ";
 
     $pipeliner->add_commands(new Command($cmd, "gencode_mapped.ok"));

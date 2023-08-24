@@ -39,7 +39,7 @@ use Carp;
 sub parse_fusion_result_file {
     my ($file) = @_;
 
-    my $fh = open($file) or die "Error, cannot open file: $file";
+    open(my $fh, $file) or die "Error, cannot open file: $file";
 
     my @fusions;
     
@@ -47,7 +47,7 @@ sub parse_fusion_result_file {
         
         if ($line =~ /^\#/) { next; }
         chomp $line;
-        my @vals = split(/\t/);
+        my @vals = split(/\t/, $line);
         
         my $chrA = $vals[0];
         my $orientA = $vals[8];
@@ -63,7 +63,8 @@ sub parse_fusion_result_file {
             $num_reads = $1;
             my @genes = split(/,/, $2);
             if (scalar @genes > 2) {
-                die "Error, not sure how to handle multiple gene pairs: @genes\n\n$line\n";
+                print STDERR "Error, not sure how to handle multiple gene pairs: @genes\n\n$line\n";
+                next;
             }
             ($geneA, $geneB) = @genes;
         }

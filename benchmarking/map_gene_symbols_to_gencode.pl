@@ -6,14 +6,15 @@ use Carp;
 use FindBin;
 use Data::Dumper;
 use Set::IntervalTree;
+use lib ("$FindBin::Bin/../PerlLib");
+use DelimParser;
 
-
-my $usage = "\n\n\tusage: $0 preds.collected genes.coords.gz genes.aliases [DEBUG]\n\n";
+my $usage = "\n\n\tusage: $0 preds.collected genes.coords.gz [DEBUG]\n\n";
 
 my $preds_collected_file = $ARGV[0] or die $usage;
 my $genes_coords_file = $ARGV[1] or die $usage;
-my $genes_aliases_file = $ARGV[2] or die $usage;
-my $DEBUG = $ARGV[3] || 0;
+#my $genes_aliases_file = $ARGV[2] or die $usage;
+my $DEBUG = $ARGV[2] || 0;
 
 ###############################################################################
 ### a few handy globals ;-)
@@ -49,64 +50,36 @@ main: {
     print STDERR "-init interval trees\n" if $DEBUG;
     &init_interval_trees($genes_coords_file);
 
-    print STDERR "-init aliases\n" if $DEBUG;
-    &init_aliases($genes_aliases_file, \%GENE_ALIASES);
+    #print STDERR "-init aliases\n" if $DEBUG;
+    #&init_aliases($genes_aliases_file, \%GENE_ALIASES);
 
     
     open (my $fh, $preds_collected_file) or die "Error, cannot read file $preds_collected_file";
-    my $header = <$fh>;
-    chomp $header;
-    # header
-    print join("\t", $header, "mapped_gencode_A_gene_list", "mapped_gencode_B_gene_list") . "\n";
     
-    while (my $line = <$fh>) {
-        #print STDERR $line;
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
     
-        print "//\n$line\n" if $DEBUG;
+    my @column_headers = $delim_parser->get_column_headers();
+
+
+    my $delim_writer = new DelimParser::Writer(*STDOUT, "\t", [@column_headers, "mapped_gencode_A_gene_list", "mapped_gencode_B_gene_list"]);
         
-        chomp $line;
+    while (my $row = $delim_parser->get_row()) {
+                
+        my $fusion_name = $row->{fusion};
         
-        my @x = split(/\t/, $line);
-        my $progname = $x[1];
-        my $fusion = $x[2];
-        my ($geneA, $geneB) = split(/--/, $fusion);
-        
-        my $fusion_name = "$geneA--$geneB";
+        my ($geneA, $geneB) = split(/--/, $fusion_name);
 
         #print STDERR "\t** fusion: [$fusion]  \n";
         my $gencode_A_genes = &get_gencode_overlapping_genes($geneA);
         
         my $gencode_B_genes = &get_gencode_overlapping_genes($geneB);
         
+        $row->{mapped_gencode_A_gene_list} = $gencode_A_genes;
 
-        if ($fusion =~ /ENSG/) {
-
-            # convert ensembl identifiers to gene symbols
-            
-            if ($geneA =~ /ENSG/) {
-                if (my $alias = $GENE_ALIASES{$geneA}) {
-                    $geneA = $alias;
-                }
-                else {
-                    #print STDERR "-warning, couldn't convert $geneA of $progname $fusion to gene symbol... alias lacking\n";
-                }
-            }
-            if ($geneB =~ /ENSG/) {
-                if (my $alias = $GENE_ALIASES{$geneB}) {
-                    $geneB = $alias;
-                }
-                else {
-                    #print STDERR "-warning, couldn't convert $geneB of $progname $fusion to gene symbol... alias lacking\n";
-                }
-            }
-            
-            # replace fusion name w/ the ENSG-vals replaced w/ gene symbols
-            $x[2] = "$geneA--$geneB";
-        }
-
-        print "RESULT: " if $DEBUG;
-        print join("\t", @x, $gencode_A_genes, $gencode_B_genes) . "\n";
+        $row->{mapped_gencode_B_gene_list} = $gencode_B_genes;
         
+        $delim_writer->write_row($row);
+                
     }
     close $fh;    
     

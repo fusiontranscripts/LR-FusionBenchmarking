@@ -54,8 +54,7 @@ use DelimParser;
 sub parse_fusion_result_file {
     my ($file) = @_;
 
-
-    my $fh = open($file) or die "Error, cannot open file: $file";
+    open(my $fh, $file) or die "Error, cannot open file: $file";
     my $delim_parser = new DelimParser::Reader($fh, ",");
     
     my @fusions;
@@ -74,8 +73,35 @@ sub parse_fusion_result_file {
         my $coordB = $row->{base2};
         
         my $num_reads = $row->{'spanning reads'};
-                
+
+        ## get sample encoding
+        my $dataset = $row->{sample};
+        my $seqtype;
+        if ($dataset =~ /Pac/) {
+            $seqtype = "Pac";
+        }
+        elsif ($dataset =~ /ONT/) {
+            $seqtype = "ONT";
+        }
+        else {
+            die "Error, cannot ascertain Pac or ONT from $dataset";
+        }
+
+        my $divergence_level;
+        if ($dataset =~ /(\d+)err/) {
+            $divergence_level = $1;
+        }
+        else {
+            die "Error, cannot ascertain divergence level from $dataset";
+        }
+        
+        $dataset = "${seqtype}_${divergence_level}";
+
+        
         my $struct = {
+            
+            dataset => $dataset,
+            
             geneA => $fusion_gene_A,
             
             geneB => $fusion_gene_B,
