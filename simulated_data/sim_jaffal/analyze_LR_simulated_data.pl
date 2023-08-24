@@ -52,7 +52,6 @@ main: {
     $cmd = "$benchmark_toolkit_basedir/map_gene_symbols_to_gencode.pl "
         . " preds.collected "
         . " $benchmark_data_basedir/resources/genes.coords.gz "
-        #. " $benchmark_data_basedir/resources/genes.aliases "
         . " > preds.collected.gencode_mapped ";
 
     $pipeliner->add_commands(new Command($cmd, "gencode_mapped.ok"));
