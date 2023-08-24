@@ -70,11 +70,11 @@ main: {
     ######  Scoring of fusions #######
     
     # score strictly
-    &score_and_plot_replicates("preds.collected.gencode_mapped.wAnnot.filt", 
-                               $sim_truth_set, 
-                               $sim_fusion_TPM_values,
-                               'analyze_strict', 
-                               { allow_reverse_fusion => 0, allow_paralogs => 0 } );
+    &score_and_plot("preds.collected.gencode_mapped.wAnnot.filt", 
+                    $sim_truth_set, 
+                    $sim_fusion_TPM_values,
+                    'analyze_strict', 
+                    { allow_reverse_fusion => 0, allow_paralogs => 0 } );
     
     # score allow reverse fusion
     &score_and_plot_replicates("preds.collected.gencode_mapped.wAnnot.filt", 
