@@ -351,11 +351,13 @@ sub parse_truth_set {
     my %sample_to_truth;
 
     open(my $fh, $tp_fusions_file) or die "Error, cannot open file $tp_fusions_file";
-    my $header = <$fh>;
-    while (<$fh>) {
-        chomp;
-        
-        my ($sample_name, $fusion_name, $num_reads) = split(/\t/);
+    
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
+    
+    while(my $row = $delim_parser->get_row()) {
+        my $sample_name = $row->{sample};
+        my $fusion_name = $row->{FusionName};
+        my $num_reads = $row->{num_reads};
         
         $sample_to_truth{$sample_name}->{$fusion_name} = $num_reads;
     }
