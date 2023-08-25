@@ -7,7 +7,7 @@ import pandas as pd
 
 def main():
 
-    usage = "usage: {} jaffal.simreads.fq.gz\n\n"
+    usage = "usage: {} jaffal.simreads.fq.gz\n\n".format(sys.argv[0])
 
     if len(sys.argv) < 2:
         exit(usage)
@@ -18,12 +18,10 @@ def main():
 
     with pysam.FastxFile(fastq_file) as fh:
         for entry in fh:
-            fusion_gene_pair = re.search(r"(\S+)\|.*--(\S+)\|.*", entry.comment)
-            fusion_gene_pair = "--".join(fusion_gene_pair.groups())
-            
+            fusion_gene_pair = (entry.comment).split(",")[0]
             fusion_read_support[fusion_gene_pair] += 1
 
-
+    
     df = pd.DataFrame(fusion_read_support.items(), columns=['fusion_name', 'num_reads'])
 
     df.sort_values('num_reads', ascending=False, inplace=True)
