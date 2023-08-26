@@ -7,9 +7,9 @@ ROC_file_listing = read.table("ROC.files.list", header=F)[,1]
 seqtype_divergence = sapply(ROC_file_listing, function(x) { str_split(x, "/")[[1]][2]}) 
 
 seqtype = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][1]}) 
-divergence = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][2]})
+#divergence = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][2]})
 
-ROC_file_listing = data_frame(seqtype=seqtype, divergence=as.numeric(divergence), filename=ROC_file_listing)
+ROC_file_listing = data_frame(seqtype=seqtype, filename=ROC_file_listing)
 
 all_data = NULL
 
