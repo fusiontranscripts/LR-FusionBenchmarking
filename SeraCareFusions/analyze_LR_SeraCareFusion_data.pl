@@ -155,16 +155,16 @@ sub score_and_plot {
     my $cmd = 'find . -regex ".*fusion_preds.txt.scored.ROC"  >  ROC.files.list';
     $pipeliner->add_commands(new Command($cmd, "gather.ROC.files.ok"));
 
-    #$cmd = "../util/plot_jaffal_ROC_summary.Rscript";
-    #$pipeliner->add_commands(new Command($cmd, "plot_summary.ROC.files.ok"));
+    $cmd = "../util/plot_ROC_summary.Rscript";
+    $pipeliner->add_commands(new Command($cmd, "plot_summary.ROC.files.ok"));
 
 
     $cmd = 'find . -regex ".*fusion_preds.txt.scored.PR.AUC"  >  PR.AUC.files.list';
     $pipeliner->add_commands(new Command($cmd, "gather.PR.AUC.files.ok"));
     
     
-    #$cmd = "../util/plot_jaffal_PR_AUC_barplot.Rscript";
-    #$pipeliner->add_commands(new Command($cmd, "plot_summary.PR.AUC.files.ok"));    
+    $cmd = "../util/plot_PR_AUC_barplot.Rscript";
+    $pipeliner->add_commands(new Command($cmd, "plot_summary.PR.AUC.files.ok"));    
     
 
 
