@@ -66,8 +66,8 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "annotate_fusions.ok"));
 
 
-    # filter HLA and mitochondrial features
-    $cmd = "$benchmark_toolkit_basedir/filter_collected_preds.pl preds.collected.gencode_mapped.wAnnot > preds.collected.gencode_mapped.wAnnot.filt";
+    # filter HLA and mitochondrial features, and require min 2 read support
+    $cmd = "$benchmark_toolkit_basedir/filter_collected_preds.pl preds.collected.gencode_mapped.wAnnot 2 > preds.collected.gencode_mapped.wAnnot.filt";
     $pipeliner->add_commands(new Command($cmd, "filter_fusion_annot.ok"));
 
     
@@ -84,9 +84,9 @@ main: {
     
     ## run Venn-based accuracy analysis:
 
-    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl preds.collected.gencode_mapped.wAnnot.filt progs_select.txt 3 6";
+    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl preds.collected.gencode_mapped.wAnnot.filt progs_select.txt 2 5";
     $pipeliner->add_commands(new Command($cmd, "venn_analysis.ok"));
-   
+    
     $pipeliner->run();
     
     exit(0);
