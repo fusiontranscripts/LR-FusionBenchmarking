@@ -43,7 +43,7 @@ main: {
         #print $line;
         chomp;
                 
-        my ($prog_name, $seqtype_divergence, $result_file) = split(/\t/);
+        my ($prog_name, $dataset, $result_file) = split(/\t/);
         
         my $parser_module;
 
@@ -71,17 +71,13 @@ main: {
         
         foreach my $fusion (@fusions) {
 
-            if (exists $fusion->{dataset}) {
-                $seqtype_divergence = $fusion->{dataset}; # hack for the way jaffal data currently exist here.
-            }
-            
             my $fusion_name = join("--", $fusion->{geneA}, $fusion->{geneB});
             
             my $num_reads = $fusion->{num_reads};
             
             my $breakpoint = $fusion->{breakpoint};
             
-            print join("\t", $seqtype_divergence, $prog_name, $fusion_name, $breakpoint, $num_reads) . "\n";
+            print join("\t", $dataset, $prog_name, $fusion_name, $breakpoint, $num_reads) . "\n";
         }
         
     }
