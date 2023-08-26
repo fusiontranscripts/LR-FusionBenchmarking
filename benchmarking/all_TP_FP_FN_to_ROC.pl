@@ -89,7 +89,7 @@ sub parse_file {
     
     while(my $row = $delim_parser->get_row()) {
         
-        my $pred_type = $row->{pred_class};
+        my $pred_type = $row->{pred_class} || $row->{pred_result}; # TODO:// unify this
         unless ($pred_type =~ /^(TP|FP|FN)$/) { next; }
         
         my $sample_name = $row->{sample};

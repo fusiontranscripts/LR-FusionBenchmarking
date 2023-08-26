@@ -147,7 +147,7 @@ sub evaluate_predictions {
     ##################
     # score TP, FP, FN
     
-    my $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_TP_FP_FN.pl --truth_fusions $min_agree_truth_set --fusion_preds $input_file";
+    my $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_TP_FP_FN.original.pl --truth_fusions $min_agree_truth_set --fusion_preds $input_file";
 
     $cmd .= " --allow_reverse_fusion "; # always do this here. Sim data shows it's important for some progs.
     

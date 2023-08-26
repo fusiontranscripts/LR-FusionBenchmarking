@@ -1,0 +1,5 @@
+ctat-LR-fusion.v0.10.0
+fusionseeker
+JAFFAL
+LongGF
+pbfusion_v0.3.1

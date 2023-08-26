@@ -2,6 +2,9 @@
 
 use strict;
 use warnings;
+use FindBin;
+use lib ("$FindBin::Bin/../PerlLib");
+use DelimParser;
 
 my $usage = "usage: $0 preds.collected\n\n";
 
@@ -14,26 +17,22 @@ main: {
     my %fusion_preds;
 
     open(my $fh, $preds_file) or die $!;
-    my $header = <$fh>;
-    unless ($header =~ /^sample\tprog/) {
-        die "Error, missing expected header format for $preds_file";
-    }
-    while(<$fh>) {
-        chomp;
-        my @x = split(/\t/);
-        my $sample_name = $x[0];
-        my $prog = $x[1];
-        my $fusion_name = uc $x[2];
-        my $J = $x[3];
-        my $S = $x[4];
+    
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
+    
+    while (my $row = $delim_parser->get_row()) {
+        
+        my $sample_name = $row->{sample};
+        my $prog = $row->{prog};
+        my $fusion_name = uc $row->{fusion};
 
-        my $sum_JS = $J + $S;
-
+        my $num_reads = $row->{num_reads};
+        
         $fusion_name = "$sample_name|$fusion_name";
 
         $prognames{$prog} = 1;
         
-        $fusion_preds{$fusion_name}->{$prog} = $sum_JS;
+        $fusion_preds{$fusion_name}->{$prog} = $num_reads;
         
     }
     close $fh;
