@@ -76,27 +76,33 @@ sub parse_fusion_result_file {
 
         ## get sample encoding
         my $dataset = $row->{sample};
-        my $seqtype;
-        if ($dataset =~ /Pac/) {
-            $seqtype = "Pac";
-        }
-        elsif ($dataset =~ /ONT/) {
-            $seqtype = "ONT";
-        }
-        else {
-            die "Error, cannot ascertain Pac or ONT from $dataset";
-        }
-
-        my $divergence_level;
-        if ($dataset =~ /(\d+)err/) {
-            $divergence_level = $1;
-        }
-        else {
-            die "Error, cannot ascertain divergence level from $dataset";
+        
+        
+        if ($dataset =~ /Pac|ONT/ && $dataset =~ /\d+err/) {
+            ## jaffal sim data customization here.
+            
+            my $seqtype;
+            if ($dataset =~ /Pac/) {
+                $seqtype = "Pac";
+            }
+            elsif ($dataset =~ /ONT/) {
+                $seqtype = "ONT";
+            }
+            else {
+                die "Error, cannot ascertain Pac or ONT from $dataset";
+            }
+            
+            my $divergence_level;
+            if ($dataset =~ /(\d+)err/) {
+                $divergence_level = $1;
+            }
+            else {
+                die "Error, cannot ascertain divergence level from $dataset";
+            }
+            
+            $dataset = "${seqtype}_${divergence_level}";
         }
         
-        $dataset = "${seqtype}_${divergence_level}";
-
         
         my $struct = {
             
