@@ -1,4 +1,8 @@
 
 
 rm -rf ./_*
-rm -rf ./preds*
+rm -f ./preds*
+rm -f ./all.auc.*
+rm -f ./okPara_ignoreUnsure*
+rm -f ./ignoreUnsure*
+rm -f auc_files.list  fusion_result_file_listing.dat  pipe.log

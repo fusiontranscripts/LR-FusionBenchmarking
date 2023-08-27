@@ -23,6 +23,7 @@ while(my $row = $delim_parser_reader->get_row()) {
 
     my $fusion_name = $row->{fusion};
     my $num_reads = $row->{num_reads};
+    my $breakpoint = $row->{breakpoint};
     my $annot = $row->{annots};
     
     unless($num_reads >= $min_reads) {
@@ -32,10 +33,16 @@ while(my $row = $delim_parser_reader->get_row()) {
 
     if ($fusion_name =~ /(^HLA\-)|\-HLA\-/ 
         ||
-        ($annot && 
-         ($annot =~ /chrM:/i
+        
+        $breakpoint =~ /chrM:/
+
+        ||
+        
+        (defined($annot) && 
+
+         ($annot =~ /NEIGHBOR/
           ||
-          $annot =~ /NEIGHBOR/
+          $annot =~ /chrM\b/
           ||
           $annot =~ /BLAST/
           ||

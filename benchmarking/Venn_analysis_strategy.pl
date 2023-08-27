@@ -29,8 +29,8 @@ main: {
 
     my $pipeliner = &init_pipeliner();
     
-    # capture counts of progs agree:
-    my $cmd = "$benchmark_toolkit_basedir/collected_preds_to_fusion_prog_support_listing.pl $preds_file $progs_select_file > $preds_file.byProgAgree";
+    # capture counts of progs agree: (also writes $preds_file.proxy_assignments ) with proxy fusion selected.
+    my $cmd = "$benchmark_toolkit_basedir/collected_preds_to_fusion_prog_support_listing.pl $preds_file $progs_select_file > $preds_file.proxy_assignments.byProgAgree";
     $pipeliner->add_commands(new Command($cmd, "byProgAgree.ok"));
     
     $pipeliner->run();
@@ -45,7 +45,7 @@ main: {
     my @min_agree_truth = ($low_agree .. $high_agree);
     
     foreach my $min_agree (@min_agree_truth) {
-        &score_and_plot("$preds_file", "$preds_file.byProgAgree", $min_agree);
+        &score_and_plot("$preds_file", "$preds_file.proxy_assignments.byProgAgree", $min_agree);
     }
     
     ########################
@@ -92,6 +92,7 @@ sub score_and_plot {
     chdir ($workdir) or die "Error, cannot cd to $workdir";
 
     my $pipeliner = &init_pipeliner();
+    
     
     # define min agree set:
     my $cmd = "$benchmark_toolkit_basedir/define_truth_n_unsure_set.pl $prog_agree_listing $min_agree";
