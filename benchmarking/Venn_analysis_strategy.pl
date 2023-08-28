@@ -45,7 +45,7 @@ main: {
     my @min_agree_truth = ($low_agree .. $high_agree);
     
     foreach my $min_agree (@min_agree_truth) {
-        &score_and_plot("$preds_file", "$preds_file.proxy_assignments.byProgAgree", $min_agree);
+        &score_and_plot("$preds_file.proxy_assignments", "$preds_file.proxy_assignments.byProgAgree", $min_agree);
     }
     
     ########################
