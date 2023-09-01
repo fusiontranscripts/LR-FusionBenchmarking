@@ -1,0 +1,166 @@
+---
+title: "ctat-LR-fusion on Seracare"
+author: "bhaas"
+date: '2023-07-18'
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(GGally)
+```
+
+
+
+# sequencing info:
+
+“biosample id” - “movie name” - “flowcell id” - “intrument”
+
+Fusion_Monomer_AS009 - m64020e_230609_061545 - DA173941 - Sequel IIe
+
+8mer_ISE_TSO_Iso_bc_Primers_AS007 - m64363e_230614_195212 - DA240205 - Sequel IIe
+
+
+
+
+```{r}
+
+seracare_truth_fusions = read.table("SeraCare_fusion_targets.tsv")[,1]
+
+seracare_truth_fusions
+```
+
+
+
+```{r}
+# seracare fusion standard read counts:
+
+readcounts_df = data.frame(
+    dataset = c('IsoSeq', 'Mas-seq_A', 'Mas-seq_B'),
+    num_reads = c(4808757, 7861186, 7580242) )
+
+
+readcounts_df  %>% ggplot(aes(x=dataset, y=num_reads, fill=dataset)) + geom_col() +
+    ggtitle("SeraCareFusionStandard: Number of LR sequenced")
+
+```
+
+
+
+
+
+
+```{r}
+
+
+
+isoseq_results_file = "prog_results/ctat-LR-fusion.v0.10.0/SeraCareFusions_Isoseq.ctat-LR-fusion.fusion_predictions.tsv"
+
+isoseq_data = read.table(isoseq_results_file, sep="\t", header=T, com='', stringsAsFactors = F) %>% rename(FusionName=X.FusionName)
+
+isoseq_data %>% head()
+```
+
+
+```{r}
+
+masseq_A_results_file = "prog_results/ctat-LR-fusion.v0.10.0/SeraCareFusions_MASseq-bc08.ctat-LR-fusion.fusion_predictions.tsv"
+
+masseq_A_data = read.table(masseq_A_results_file, sep="\t", header=T, com='', stringsAsFactors = F) %>% rename(FusionName=X.FusionName)
+
+masseq_A_data %>% head()
+
+```
+
+```{r}
+
+masseq_B_results_file = "prog_results/ctat-LR-fusion.v0.10.0/SeraCareFusions_MASseq-bc09.ctat-LR-fusion.fusion_predictions.tsv"
+
+masseq_B_data = read.table(masseq_B_results_file, sep="\t", header=T, com='', stringsAsFactors = F) %>% rename(FusionName=X.FusionName)
+
+masseq_B_data %>% head()
+
+
+```
+
+```{r}
+
+combined_data = bind_rows( isoseq_data %>% mutate(dataset='ISOseq'),
+                           masseq_A_data %>% mutate(dataset='MASseqA'),
+                           masseq_B_data %>% mutate(dataset='MASseqB'))
+
+combined_data = combined_data %>% mutate(RefFusion = (FusionName %in% seracare_truth_fusions))
+
+
+combined_data %>% head()
+```
+
+
+```{r}
+
+combined_data %>% filter(RefFusion) %>% ggplot(aes(x=FusionName, y=LR_FFPM, fill=dataset)) + 
+    geom_bar(stat='identity', position='dodge')   + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    ggtitle("ctat-LR-fusion (v0.6.0) detection of SeraCare Fusion Standards")
+
+
+
+```
+
+```{r}
+
+combined_data %>% filter(RefFusion) %>% ggplot(aes(x=FusionName, y=num_LR, fill=dataset)) + 
+    geom_bar(stat='identity', position='dodge')   + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    ggtitle("ctat-LR-fusion (v0.6.0) detection of SeraCare Fusion Standards")
+
+
+```
+
+
+
+# Compare common fusions and expression values
+
+```{r}
+
+
+fusion_matrix = combined_data  %>% 
+    group_by(FusionName, dataset) %>% arrange(desc(LR_FFPM)) %>% filter(row_number() == 1) %>% ungroup() %>%
+    select(FusionName, dataset, LR_FFPM) %>% 
+    spread(key=dataset, value=LR_FFPM)
+
+fusion_matrix %>% head()
+```
+
+```{r}
+
+ggpairs(fusion_matrix, columns=2:4) +
+    ggtitle("All Fusions Found in SeraCare Standard")
+
+
+```
+
+
+```{r}
+# restrict to just the seracare fusions:
+
+ggpairs(fusion_matrix %>% filter(FusionName %in% seracare_truth_fusions), columns=2:4) + 
+    ggtitle("Only SeraCare Ref Fusions")
+
+
+
+```
+
+```{r}
+
+fusion_matrix  %>% 
+    mutate(RefFusion = (FusionName %in% seracare_truth_fusions)) %>%
+               ggplot(aes(x=MASseqA, y=MASseqB, color=RefFusion)) + geom_point() +
+    ggtitle("MAS-seq replicate comparison") +
+    geom_abline(slope=1, intercept=0)
+
+```
+
+
+
