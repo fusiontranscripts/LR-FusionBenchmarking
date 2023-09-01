@@ -237,7 +237,8 @@ sub examine_sample {
             open (my $ofh, ">$sample_TP_fusions_file") or die "Error, cannot write to $sample_TP_fusions_file";
             print $ofh "fusion_name\tnum_reads\n";
             foreach my $fusion (@TP_fusions) {
-                my $num_reads = $sample_truth_href->{$fusion};
+                my $num_reads = $sample_truth_href->{$fusion}->{num_reads};
+                my $breakpoint = $sample_truth_href->{$fusion}->{breakpoint};
                 print $ofh join("\t", $fusion, $num_reads) . "\n";
             }
             close $ofh;
@@ -357,9 +358,8 @@ sub parse_truth_set {
     while(my $row = $delim_parser->get_row()) {
         my $sample_name = $row->{sample};
         my $fusion_name = $row->{FusionName};
-        my $num_reads = $row->{num_reads};
-        
-        $sample_to_truth{$sample_name}->{$fusion_name} = $num_reads;
+        $row->{breakpoint} = $row->{Hg38_LeftBreakpoint} . "--" . $row->{Hg38_RightBreakpoint};
+        $sample_to_truth{$sample_name}->{$fusion_name} = $row;
     }
     close $fh;
 
