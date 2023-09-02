@@ -9,15 +9,69 @@ from typing import Any
 from collections import defaultdict
 import warnings
 import numpy as np
-
+import argparse
 
 
 
 def main():
-    pass
+
+    parser = argparse.ArgumentParser(description="assign TP, FP, and FN pred_class for fusions based on breakpoints", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    parser.add_argument("--truth_fusions", type=str, required=True, help="truth fusions")
+    parser.add_argument("--pred_fusions", type=str, required=True, help="predicted fusions")
+
+    args = parser.parse_args()
+
+    truth_fusions = args.truth_fusions
+    pred_fusions = args.pred_fusions
+
+
+    truth_fusions_df = pd.read_csv(truth_fusions, sep="\t")
+    truth_fusions_df['lexsort_breakpoint'] = truth_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
+    truth_fusions_df.rename(columns={'fusion_name' : 'truth_fusion_name',
+                                     'breakpoint' : 'truth_breakpoint',
+                                     'num_reads' : 'truth_num_reads'},
+                            inplace=True)
+    
+    
+    pred_fusions_df = pd.read_csv(pred_fusions, sep="\t")
+    pred_fusions_df['lexsort_breakpoint'] = pred_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
+
+
+    pred_fusions_df = pd.merge(truth_fusions_df, pred_fusions_df, on='lexsort_breakpoint')
+    pred_fusions_df.sort_values(by=['lexsort_breakpoint', 'num_reads'], ascending=[True, False], inplace=True)
+
+
+    def assign_TP_FP_FN(df_slice):
+        categories = list()
+        for _, row in df_slice.iterrows():
+            if pd.isnull(row['truth_fusion_name']):
+                categories.append('FP')
+
+            else:
+                # truth fusion specified. either TP or FN depending on pred fusion status
+                if pd.isnull(row['fusion']):
+                    categories.append('FN')
+                else:
+                    categories.append('TP')
+        
+        # only score each breakpoint once.
+        if len(categories) > 1:
+            categories[1:] = ["NA_" + x for x in categories[1:] ]
+
+        df_slice['pred_class'] = categories
+
+        return df_slice
 
 
 
+    pred_fusions_df = pred_fusions_df.groupby('lexsort_breakpoint').apply(assign_TP_FP_FN)
+
+  
+    pred_fusions_df.to_csv(sys.stdout, sep="\t", index=False)
+
+
+    sys.exit(0)
 
 
 # methods based on Alvin's code:
