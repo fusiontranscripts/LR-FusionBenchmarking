@@ -32,16 +32,34 @@ def main():
                                      'breakpoint' : 'truth_breakpoint',
                                      'num_reads' : 'truth_num_reads'},
                             inplace=True)
-    
+
     
     pred_fusions_df = pd.read_csv(pred_fusions, sep="\t")
     pred_fusions_df['lexsort_breakpoint'] = pred_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
 
 
-    pred_fusions_df = pd.merge(truth_fusions_df, pred_fusions_df, on='lexsort_breakpoint')
-    pred_fusions_df.sort_values(by=['lexsort_breakpoint', 'num_reads'], ascending=[True, False], inplace=True)
+    ## should only be one sample type!
+    assert len(pred_fusions_df['sample'].unique()) == 1, "Error, num samples != 1 "
 
+    #must copy the truth set for each program to be analyzed separately so FNs show up in each case.
+    all_truth_dfs = None
+    progs = pred_fusions_df['prog'].unique()
+    for prog in progs:
+        prog_truth_df = truth_fusions_df.copy()
+        prog_truth_df['prog'] = prog
+                                       
+        if all_truth_dfs is None:
+            all_truth_dfs = prog_truth_df
+        else:
+            all_truth_dfs = pd.concat([all_truth_dfs, prog_truth_df])
+    
 
+    
+    pred_fusions_df = pd.merge(all_truth_dfs, pred_fusions_df, on=['prog', 'lexsort_breakpoint'], how='outer')
+    
+    pred_fusions_df.sort_values(by=['prog', 'lexsort_breakpoint', 'num_reads'], ascending=[True, True, False], inplace=True)
+    
+    
     def assign_TP_FP_FN(df_slice):
         categories = list()
         for _, row in df_slice.iterrows():
@@ -65,8 +83,8 @@ def main():
 
 
 
-    pred_fusions_df = pred_fusions_df.groupby('lexsort_breakpoint').apply(assign_TP_FP_FN)
-
+    pred_fusions_df = pred_fusions_df.groupby(['prog', 'lexsort_breakpoint']).apply(assign_TP_FP_FN)
+    
   
     pred_fusions_df.to_csv(sys.stdout, sep="\t", index=False)
 
