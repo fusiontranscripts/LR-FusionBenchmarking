@@ -21,7 +21,10 @@ my %prog_type_to_file_parser = (
     'fusionseeker_s1' => 'FusionSeeker_parser',
     'JAFFAL' => 'JAFFAL_parser',
     'LongGF' => 'LongGF_parser',
-    'pbfusionv0.3.1_broadgtfv22' => 'PBfusion_parser',
+    'pbfusion_v0.3.1' => 'PBfusion_parser',
+    'pbfusion_v0.2.3' => 'PBfusion_parser',
+    'pbfusion_v0.3.0' => 'PBfusion_parser',
+    
     );
 
 

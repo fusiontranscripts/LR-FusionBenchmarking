@@ -91,7 +91,7 @@ def main():
 
 
     # those without matched truth fusions are labeled FPs.
-    FP_results_df = all_results_df[ all_results_df['truth_brkpts'].isnull() ].copy()
+    FP_results_df = all_results_df[ all_results_df['truth_brkpts'].isnull() ].drop_duplicates().copy()
     FP_results_df['pred_class'] = 'FP'
 
     TP_FN_results = all_results_df[ ~ all_results_df['truth_brkpts'].isnull() ].groupby(['prog', 'truth_brkpts']).apply(assign_TP_FN)
