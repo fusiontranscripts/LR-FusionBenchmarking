@@ -34,7 +34,7 @@ def main():
         for line in fin:
             fields = line.strip().split()
 
-            min_frags = int(fields[1])
+            min_frags = int(float(fields[1]))
             if (min_frags < args.min_read_support):
                 continue
             

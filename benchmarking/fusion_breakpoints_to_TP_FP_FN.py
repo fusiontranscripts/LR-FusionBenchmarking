@@ -19,15 +19,16 @@ def main():
 
     parser.add_argument("--truth_fusions", type=str, required=True, help="truth fusions")
     parser.add_argument("--pred_fusions", type=str, required=True, help="predicted fusions")
+    parser.add_argument("--max_dist", type=int, required=False, help="maximum allowed distance from known breakpoints", default=0)
 
     args = parser.parse_args()
 
     truth_fusions = args.truth_fusions
     pred_fusions = args.pred_fusions
-
+    max_dist = args.max_dist
 
     truth_fusions_df = pd.read_csv(truth_fusions, sep="\t")
-    truth_fusions_df['lexsort_breakpoint'] = truth_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
+    truth_fusions_df['truth_lexsort_breakpoint'] = truth_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
     truth_fusions_df.rename(columns={'fusion_name' : 'truth_fusion_name',
                                      'breakpoint' : 'truth_breakpoint',
                                      'num_reads' : 'truth_num_reads'},
@@ -35,44 +36,50 @@ def main():
 
     
     pred_fusions_df = pd.read_csv(pred_fusions, sep="\t")
-    pred_fusions_df['lexsort_breakpoint'] = pred_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
+    pred_fusions_df['pred_lexsort_breakpoint'] = pred_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
 
 
     ## should only be one sample type!
     assert len(pred_fusions_df['sample'].unique()) == 1, "Error, num samples != 1 "
+    sample_name = pred_fusions_df['sample'].unique()[0]
 
     #must copy the truth set for each program to be analyzed separately so FNs show up in each case.
-    all_truth_dfs = None
+    all_results_df = None
     progs = pred_fusions_df['prog'].unique()
+    truth_breakpoints = truth_fusions_df['truth_lexsort_breakpoint']
     for prog in progs:
-        prog_truth_df = truth_fusions_df.copy()
-        prog_truth_df['prog'] = prog
-                                       
-        if all_truth_dfs is None:
-            all_truth_dfs = prog_truth_df
+
+        prog_pred_fusions_df = pred_fusions_df[ pred_fusions_df['prog'] == prog ]
+
+        prog_pred_fusions_brkpts = prog_pred_fusions_df['pred_lexsort_breakpoint']
+
+        results_df = overlap_breakpoints(truth_breakpoints, prog_pred_fusions_brkpts, max_dist)
+
+        # merge in truth info
+        results_df = pd.merge(results_df, truth_fusions_df, left_on='truth_brkpts', right_on='truth_lexsort_breakpoint', how='outer')
+        # merge in pred info
+        results_df = pd.merge(results_df, prog_pred_fusions_df, left_on='pred_brkpts', right_on='pred_lexsort_breakpoint', how='outer')
+
+        results_df['prog'] = prog # ensure in all entries for FNs (unmatched truth)
+        results_df['sample'] = sample_name
+        
+        if all_results_df is None:
+            all_results_df = results_df
         else:
-            all_truth_dfs = pd.concat([all_truth_dfs, prog_truth_df])
+            all_results_df = pd.concat([all_results_df, results_df])
     
 
-    
-    pred_fusions_df = pd.merge(all_truth_dfs, pred_fusions_df, on=['prog', 'lexsort_breakpoint'], how='outer')
-    
-    pred_fusions_df.sort_values(by=['prog', 'lexsort_breakpoint', 'num_reads'], ascending=[True, True, False], inplace=True)
-    
-    
-    def assign_TP_FP_FN(df_slice):
+    def assign_TP_FN(df_slice):
+
+        df_slice.sort_values('num_reads', ascending=False, inplace=True)
+        
         categories = list()
         for _, row in df_slice.iterrows():
-            if pd.isnull(row['truth_fusion_name']):
-                categories.append('FP')
-
+            if pd.isnull(row['pred_brkpts']):
+                categories.append('FN')
             else:
-                # truth fusion specified. either TP or FN depending on pred fusion status
-                if pd.isnull(row['fusion']):
-                    categories.append('FN')
-                else:
-                    categories.append('TP')
-        
+                categories.append('TP')
+
         # only score each breakpoint once.
         if len(categories) > 1:
             categories[1:] = ["NA_" + x for x in categories[1:] ]
@@ -83,12 +90,19 @@ def main():
 
 
 
-    pred_fusions_df = pred_fusions_df.groupby(['prog', 'lexsort_breakpoint']).apply(assign_TP_FP_FN)
+    # those without matched truth fusions are labeled FPs.
+    FP_results_df = all_results_df[ all_results_df['truth_brkpts'].isnull() ].copy()
+    FP_results_df['pred_class'] = 'FP'
+
+    TP_FN_results = all_results_df[ ~ all_results_df['truth_brkpts'].isnull() ].groupby(['prog', 'truth_brkpts']).apply(assign_TP_FN)
     
-  
-    pred_fusions_df.to_csv(sys.stdout, sep="\t", index=False)
+    all_results_df = pd.concat([TP_FN_results, FP_results_df])
 
+    all_results_df.sort_values(['prog', 'truth_brkpts', 'num_reads', 'pred_class'], ascending=[True, True, False, True], inplace=True)
+    
 
+    all_results_df.to_csv(sys.stdout, sep="\t", index=False)
+    
     sys.exit(0)
 
 

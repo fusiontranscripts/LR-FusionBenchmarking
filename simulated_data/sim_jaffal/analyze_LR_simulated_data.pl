@@ -101,8 +101,16 @@ main: {
                     { allow_reverse_fusion => 1, allow_paralogs => 1 },
                     $column_headers_aref);
     
-
-
+    
+    ## fusion breakpoint analysis
+    
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
+                    'breakpoint_exact', 
+                    {breakpoint_eval => 1,
+                     max_dist => 0 },
+                    $column_headers_aref);
+    
     
     ## Compare TP and FP before and after paralog-equiv
     #
@@ -212,7 +220,7 @@ sub score_and_plot {
         
     return;
 }
-    
+
 ####
 sub examine_sample {
     my ($sample_type, $sample_truth_href, $fusion_prog_to_preds_href, $analysis_settings_href, $column_headers_aref) = @_;
@@ -265,30 +273,45 @@ sub examine_sample {
 
     my $pipeliner = &init_pipeliner();
     
-    my $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_TP_FP_FN.pl --truth_fusions $sample_TP_fusions_file --fusion_preds $fusion_preds_file";
+    my $cmd;
+
+    if ($analysis_settings_href->{breakpoint_eval}) {
+        
+        my $max_dist = $analysis_settings_href->{max_dist};
+
+        $cmd = "$benchmark_toolkit_basedir/fusion_breakpoints_to_TP_FP_FN.py --truth_fusions $sample_TP_fusions_file --pred_fusions $fusion_preds_file --max_dist $max_dist > $fusion_preds_file.scored";
+        
+
+
+    }
+    else {
+        
+        $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_TP_FP_FN.pl --truth_fusions $sample_TP_fusions_file --fusion_preds $fusion_preds_file";
+        
+        if ($analysis_settings_href->{allow_reverse_fusion}) {
+            $cmd .= " --allow_reverse_fusion ";
+        }
+        if ($analysis_settings_href->{allow_paralogs}) {
+            $cmd .= " --allow_paralogs $benchmark_data_basedir/resources/paralog_clusters.dat ";
+        }
+        
+        $cmd .= " > $fusion_preds_file.scored";
+        
+        #print $cmd;
+        #die;
+    }
     
-    if ($analysis_settings_href->{allow_reverse_fusion}) {
-        $cmd .= " --allow_reverse_fusion ";
-    }
-    if ($analysis_settings_href->{allow_paralogs}) {
-        $cmd .= " --allow_paralogs $benchmark_data_basedir/resources/paralog_clusters.dat ";
-    }
-
-    $cmd .= " > $fusion_preds_file.scored";
-
-    #print $cmd;
-    #die;
-
     $pipeliner->add_commands(new Command($cmd, "tp_fp_fn.ok"));
     
     $pipeliner->run();
     
+        
+    &ROC_and_PR("$fusion_preds_file.scored", $analysis_settings_href);
     
-    &ROC_and_PR("$fusion_preds_file.scored");
     
-
+    
     chdir $basedir or die "Error, cannot cd back to $basedir";
-
+        
     return;
 
 }
@@ -296,7 +319,7 @@ sub examine_sample {
    
 ####
 sub ROC_and_PR {
-    my ($preds_scored) = @_;
+    my ($preds_scored, $analysis_settings_href) = @_;
 
     ## run analysis pipeline
     my $pipeliner = &init_pipeliner();
@@ -304,14 +327,19 @@ sub ROC_and_PR {
     ##############
     # generate ROC
     
-    my $cmd = "$benchmark_toolkit_basedir/all_TP_FP_FN_to_ROC.pl $preds_scored > $preds_scored.ROC"; 
+    my $ROC_script = "$benchmark_toolkit_basedir/all_TP_FP_FN_to_ROC.pl";
+
+    if ($analysis_settings_href->{breakpoint_eval}) {
+        $ROC_script = "$benchmark_toolkit_basedir/all_TP_FP_FN_to_ROC.for_brkpts.pl";
+    }
+    
+    my $cmd = "$ROC_script $preds_scored > $preds_scored.ROC"; 
     $pipeliner->add_commands(new Command($cmd, "roc.ok"));
     
     # plot ROC
     $cmd = "$benchmark_toolkit_basedir/plotters/plot_ROC.Rscript $preds_scored.ROC";
     $pipeliner->add_commands(new Command($cmd, "plot_roc.ok"));
-
-    
+        
     # plot F1
     $cmd = "$benchmark_toolkit_basedir/plotters/plot_F1_vs_min_frags.R $preds_scored.ROC";
     $pipeliner->add_commands(new Command($cmd, "plot_F1_vs_min_frags.ok"));
