@@ -80,6 +80,10 @@ main: {
     
     my ($sample_to_fusion_preds_href, $column_headers_aref) = &parse_fusion_preds("preds.collected.gencode_mapped.wAnnot.filt");
     
+    ########################################
+    ## fusion scroring based on gene symbols, gene overlaps, and paralogs
+    ## Breakpoints are not considered here.
+
     # score strictly
     &score_and_plot($sample_to_fusion_preds_href, 
                     $sample_to_truth_href, 
@@ -101,17 +105,37 @@ main: {
                     { allow_reverse_fusion => 1, allow_paralogs => 1 },
                     $column_headers_aref);
     
-    
-    ## fusion breakpoint analysis
+    #############################
+    ## fusion breakpoint analysis - only the breakpoint and distance to the breakpoint matters here.
+    #############################
     
     &score_and_plot($sample_to_fusion_preds_href, 
                     $sample_to_truth_href, 
                     'breakpoint_exact', 
-                    {breakpoint_eval => 1,
+                    { breakpoint_eval => 1, # turns on breakpoint based evaluation.
                      max_dist => 0 },
+                    $column_headers_aref);
+
+
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
+                    'breakpoint_win10', 
+                    { breakpoint_eval => 1,
+                     max_dist => 10 },
+                    $column_headers_aref);
+
+
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
+                    'breakpoint_win100', 
+                    { breakpoint_eval => 1,
+                     max_dist => 100 },
                     $column_headers_aref);
     
     
+    
+
+
     ## Compare TP and FP before and after paralog-equiv
     #
     #$cmd = "$benchmark_toolkit_basedir/plotters/plot_before_vs_after_filt_TP_FP_compare.Rscript "

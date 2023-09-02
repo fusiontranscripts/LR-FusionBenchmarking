@@ -18,6 +18,7 @@ my %prog_type_to_file_parser = (
     'ctat-LR-fusion.v0.10.0' => 'CTAT_LR_parser',
     'flairfusion' => 'FlairFusion_parser',
     'fusionseeker' => 'FusionSeeker_parser',
+    'fusionseeker_s1' => 'FusionSeeker_parser',
     'JAFFAL' => 'JAFFAL_parser',
     'LongGF' => 'LongGF_parser',
     'pbfusionv0.3.1_broadgtfv22' => 'PBfusion_parser',
