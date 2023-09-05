@@ -6,11 +6,10 @@ PR_AUC_file_listing = read.table("PR.AUC.files.list", header=F)[,1]
 
 seqtype_divergence = sapply(PR_AUC_file_listing, function(x) { str_split(x, "/")[[1]][2]}) 
 
-seqtype = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][1]}) 
-divergence = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][2]})
+coverage_level = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][1]}) 
+pass_count = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][2]})
 
-PR_AUC_file_listing = data_frame(seqtype=seqtype, divergence=as.numeric(divergence), filename=PR_AUC_file_listing)
-
+PR_AUC_file_listing = data_frame(coverage_level=coverage_level, pass_count=pass_count, filename=PR_AUC_file_listing)
 
 all_data = NULL
 
@@ -38,7 +37,7 @@ write.table(all_data, file="combined_results.PR_AUC.tsv", quote=F, sep="\t", row
 
 
 p = all_data %>% ggplot(aes(x=prog, y=AUC)) + geom_col(aes(fill=prog)) + 
- facet_grid(seqtype ~ divergence) +
+ facet_grid(coverage_level ~ pass_count) +
     ggtitle("PR AUC ~ prog") +
      theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
