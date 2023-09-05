@@ -28,7 +28,7 @@ write.table(all_data, file = "combined_results.ROC.tsv", sep="\t", row.names=F, 
 
 
 p = all_data %>% ggplot(aes(x=min_sum_frags, y=F1)) + geom_line(aes(color=prog, group=prog)) + facet_grid(pass_count ~ coverage_level) +
-    #xlim(0,10) +
+    xlim(0,20) +
     ggtitle("F1 ~ min_reads")
 
 ggsave(p, file="F1~min_reads.plot.pdf", width=10, height=8) 
