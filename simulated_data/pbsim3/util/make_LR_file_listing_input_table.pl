@@ -63,6 +63,8 @@ while (<STDIN>) {
     else {
         die "Error, cannot extract cov and pass info from filename: $filename";
     }
+
+    $dataset = "${cov}_${pass}";
     
     print join("\t", $progname, $dataset, $filename) . "\n";
     
