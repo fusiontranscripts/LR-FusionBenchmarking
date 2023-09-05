@@ -34,7 +34,14 @@ use DelimParser;
 sub parse_fusion_result_file {
     my ($file) = @_;
 
-    open(my $fh, $file) or die "Error, cannot open file: $file";
+    my $fh;
+    if ($file =~ /\.gz$/) {
+        open($fh, "gunzip -c $file | ") or die "Error, cannot open file: $file";
+    }
+    else {
+        open($fh, $file) or die "Error, cannot open file: $file";
+    }
+    
     my $delim_parser = new DelimParser::Reader($fh, "\t");
 
     my @fusions;
