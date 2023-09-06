@@ -187,7 +187,7 @@ sub score_and_plot {
     my $cmd = 'find . -regex ".*fusion_preds.txt.scored.ROC"  >  ROC.files.list';
     $pipeliner->add_commands(new Command($cmd, "gather.ROC.files.ok"));
 
-    $cmd = "../util/plot_jaffal_ROC_summary.Rscript";
+    $cmd = "../util/plot_pbsim3_ROC_summary.Rscript";
     $pipeliner->add_commands(new Command($cmd, "plot_summary.ROC.files.ok"));
 
 
@@ -195,7 +195,7 @@ sub score_and_plot {
     $pipeliner->add_commands(new Command($cmd, "gather.PR.AUC.files.ok"));
     
     
-    $cmd = "../util/plot_jaffal_PR_AUC_barplot.Rscript";
+    $cmd = "../util/plot_pbsim3_PR_AUC_barplot.Rscript";
     $pipeliner->add_commands(new Command($cmd, "plot_summary.PR.AUC.files.ok"));    
     
 
