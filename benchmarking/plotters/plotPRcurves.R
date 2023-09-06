@@ -24,6 +24,9 @@ data = read.table(argv[1], header=T)
 progs = levels(data[,1])
 colors = rainbow(length(progs))
 
+print(progs)
+print(head(progs))
+
 pdf(argv[2])
 par(mar = c(5, 4, 8, 2) + 0.1, xpd = TRUE)
 a = lapply(1:length(progs), plotPR, progs, data, colors)

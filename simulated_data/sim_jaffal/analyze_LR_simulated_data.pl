@@ -383,8 +383,8 @@ sub ROC_and_PR {
     $pipeliner->add_commands(new Command($cmd, "pr.ok"));
 
     # plot PR  curve
-    $cmd = "$benchmark_toolkit_basedir/plotters/plotPRcurves.R $preds_scored.PR $preds_scored.PR.plot.pdf";
-    $pipeliner->add_commands(new Command($cmd, "plot_pr.ok"));
+    # $cmd = "$benchmark_toolkit_basedir/plotters/plotPRcurves.R $preds_scored.PR $preds_scored.PR.plot.pdf";
+    # $pipeliner->add_commands(new Command($cmd, "plot_pr.ok"));
     
     # plot AUC barplot
     $cmd = "$benchmark_toolkit_basedir/plotters/AUC_barplot.Rscript $preds_scored.PR.AUC";
