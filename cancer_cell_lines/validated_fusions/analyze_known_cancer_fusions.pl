@@ -51,8 +51,11 @@ main: {
     ######  Scoring of fusions #######
     
     my $sample_to_truth_href = &parse_truth_set($truth_set);
+
+    my $cmd = "$benchmark_toolkit_basedir/filter_collected_preds.pl ../preds.collected.gencode_mapped.wAnnot 1 > preds.collected.gencode_mapped.wAnnot.filt.min1";
+    &process_cmd($cmd);
     
-    my ($sample_to_fusion_preds_href, $column_headers_aref) = &parse_fusion_preds("../preds.collected.gencode_mapped.wAnnot.filt");
+    my ($sample_to_fusion_preds_href, $column_headers_aref) = &parse_fusion_preds("preds.collected.gencode_mapped.wAnnot.filt.min1");
     
     # score strictly
     &score_and_plot($sample_to_fusion_preds_href, 
@@ -112,6 +115,10 @@ sub score_and_plot {
 
     my $cmd = "cat */fusion_preds.txt.scored | egrep '^(TP|FN)' > $analysis_token.TPs_n_FNs";
     &process_cmd($cmd);
+
+    $cmd = "../scripts/eval_min_agree.pl $analysis_token.TPs_n_FNs 1 ../../progs_select.txt > $analysis_token.TPs.matrix";
+    &process_cmd($cmd);
+    
     
     chdir $base_workdir or die "Error, cannot cd back to $base_workdir";
         
@@ -201,6 +208,7 @@ sub parse_truth_set {
 
     open(my $fh, $tp_fusions_file) or die "Error, cannot open file $tp_fusions_file";
     while(<$fh>) {
+        unless (/\w/) { next; }
         chomp;
         my ($sample_name, $fusion_name) = split(/\|/);
         $sample_to_truth{$sample_name}->{$fusion_name} = 1;

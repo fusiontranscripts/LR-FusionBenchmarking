@@ -4,6 +4,7 @@ use strict;
 use warnings;
 use Carp;
 use DelimParser;
+use Data::Dumper;
 
 =CTAT_LR_fusion_format
 0       #FusionName
@@ -64,7 +65,14 @@ sub parse_fusion_result_file {
         my $fusion_gene_A = $row->{LeftGene};
         my $fusion_gene_B = $row->{RightGene};
         
-        if ($fusion_gene_A eq $fusion_gene_B) { next; } # no self-fusions
+        unless ($fusion_gene_A || $fusion_gene_B) {
+            print STDERR "Error extracting fusion pairs from $file: " . Dumper($row);
+            die;
+        }
+
+        if ($fusion_gene_A eq $fusion_gene_B) { 
+            next; 
+        } # no self-fusions
 
         my $chr_coords_A = $row->{LeftBreakpoint};
         my $chr_coords_B = $row->{RightBreakpoint};

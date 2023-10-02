@@ -16,6 +16,7 @@ my $fusion_prog_parser_lib_dir = "$FindBin::Bin/../../benchmarking/FusionProgPar
 my %prog_type_to_file_parser = ( 
 
     'ctat-LR-fusion.v0.10.0' => 'CTAT_LR_parser',
+    'ctat-LR-fusion.v0.10.2' => 'CTAT_LR_parser',
     'flairfusion' => 'FlairFusion_parser',
     'fusionseeker' => 'FusionSeeker_parser',
     'JAFFAL' => 'JAFFAL_parser',

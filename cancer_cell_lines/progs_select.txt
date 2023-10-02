@@ -1,4 +1,4 @@
-ctat-LR-fusion.v0.10.0
+ctat-LR-fusion.v0.10.2
 fusionseeker
 JAFFAL
 LongGF
