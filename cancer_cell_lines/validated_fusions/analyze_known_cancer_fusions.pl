@@ -119,11 +119,11 @@ sub score_and_plot {
     $cmd = "../scripts/eval_min_agree.pl $analysis_token.TPs_n_FNs 1 ../../progs_select.txt > $analysis_token.TPs.matrix";
     &process_cmd($cmd);
     
-    
-    chdir $base_workdir or die "Error, cannot cd back to $base_workdir";
+    $cmd = "../../../benchmarking/plotters/plot_upsetR.R $analysis_token.TPs.matrix";
+    &process_cmd($cmd);
         
-
-
+    chdir $base_workdir or die "Error, cannot cd back to $base_workdir";
+    
     return;
 }
     
