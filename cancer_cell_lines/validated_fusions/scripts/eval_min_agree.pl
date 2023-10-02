@@ -33,15 +33,16 @@ main: {
         my $score_class = $x[0];
         my $sample_name = $x[1];
         my $progname = $x[2];
+        my $read_count = $x[5];
         my $fusion_name = $x[9];
         $fusion_name = "$sample_name|$fusion_name";
         
         $prognames{$progname}++;
                 
         if ($score_class eq "TP") {
-            $fusion_to_prog{$fusion_name}->{$progname}++;
+            $fusion_to_prog{$fusion_name}->{$progname}+= $read_count;
             if (%progs_to_score && exists($progs_to_score{$progname})) {
-                $progs_scored_to_fusion{$fusion_name}->{$progname}++;
+                $progs_scored_to_fusion{$fusion_name}->{$progname} += $read_count;
             }
         }            
     }
@@ -80,7 +81,7 @@ main: {
         
         my @vals = ($fusion);
         foreach my $progname (@prognames) {
-            my $found = (exists($fusion_to_prog{$fusion}->{$progname})) ? 1 : 0;
+            my $found = $fusion_to_prog{$fusion}->{$progname} || 0;
             push (@vals, $found);
         }
         

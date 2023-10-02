@@ -1,0 +1,3 @@
+[submodule "UpSetRbyFeature"]
+	path = UpSetRbyFeature
+	url = git@github.com:fusiontranscripts/UpSetRbyFeature.git
