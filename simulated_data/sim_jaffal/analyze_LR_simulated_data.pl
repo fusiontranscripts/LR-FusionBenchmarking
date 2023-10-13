@@ -133,18 +133,13 @@ main: {
                     $column_headers_aref);
     
     
+
+
+    # generate summary max F1 plots:
+    $cmd = "./util/plot_jaffal_F1_vs_divergence.Rscript";
     
-
-
-    ## Compare TP and FP before and after paralog-equiv
-    #
-    #$cmd = "$benchmark_toolkit_basedir/plotters/plot_before_vs_after_filt_TP_FP_compare.Rscript "
-    #    . " __analyze_allow_reverse/all.scored.preds.ROC.best.dat "
-    #    . " __analyze_allow_rev_and_paralogs/all.scored.preds.ROC.best.dat ";
-    # 
-    #$pipeliner->add_commands(new Command($cmd, "before_vs_after_okPara.ok"));
-    #
-    #$pipeliner->run();
+    $pipeliner->add_commands(new Command($cmd, "maxF1_summary_plots.ok"));
+    $pipeliner->run();
     
     
     exit(0);

@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use Carp;
 
 use FindBin;
 use lib ("$FindBin::Bin/../../PerlLib");
@@ -13,18 +14,36 @@ my $fusion_result_file_listing = $ARGV[0] or die $usage;
 
 my $fusion_prog_parser_lib_dir = "$FindBin::Bin/../../benchmarking/FusionProgParsers";
 
-my %prog_type_to_file_parser = ( 
-
-    'ctat-LR-fusion.v0.10.0' => 'CTAT_LR_parser',
+my %prog_to_parser = (
+    'ctat-LR-fusion' => 'CTAT_LR_parser',
     'flairfusion' => 'FlairFusion_parser',
     'fusionseeker' => 'FusionSeeker_parser',
     'JAFFAL' => 'JAFFAL_parser',
     'LongGF' => 'LongGF_parser',
-    'pbfusion_v0.3.1' => 'PBfusion_parser',
-    );
+    'pbfusion' => 'PBfusion_parser',
+);
 
 
-foreach my $module (values %prog_type_to_file_parser) {
+sub prog_type_to_file_parser {
+    my ($progname) = @_; 
+    
+    if (exists $prog_to_parser{$progname}) {
+        return($prog_to_parser{$progname});
+    }
+    else {
+        if ($progname =~ /ctat-LR-fusion/i) {
+            return($prog_to_parser{'ctat-LR-fusion'});
+        }
+        elsif ($progname =~ /pbfusion/) {
+            return($prog_to_parser{'pbfusion'});
+        }
+        else {
+            confess "Error, no parser found for $progname";
+        }
+    }
+}
+
+foreach my $module (values %prog_to_parser) {
     my $module_path = "$fusion_prog_parser_lib_dir/$module.pm";
 
     require($module_path);
@@ -45,16 +64,11 @@ main: {
                 
         my ($prog_name, $dataset, $result_file) = split(/\t/);
         
-        my $parser_module;
-
-        if (exists $prog_type_to_file_parser{$prog_name}) {
-            $parser_module = $prog_type_to_file_parser{$prog_name};
+        my $parser_module = &prog_type_to_file_parser($prog_name);
+        unless ($parser_module) {
+            confess "Error, no parser module selected for prog name: $prog_name";
         }
 
-        unless (defined $parser_module) {
-            die "Error, no parser for prog [$prog_name] ";
-        }
-        
         my $parser_function = $parser_module . "::" . "parse_fusion_result_file";
         
         no strict 'refs';
