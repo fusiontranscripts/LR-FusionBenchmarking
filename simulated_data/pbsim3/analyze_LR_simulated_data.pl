@@ -131,21 +131,16 @@ main: {
                     { breakpoint_eval => 1,
                      max_dist => 100 },
                     $column_headers_aref);
-    
-    
-    
 
-
-    ## Compare TP and FP before and after paralog-equiv
-    #
-    #$cmd = "$benchmark_toolkit_basedir/plotters/plot_before_vs_after_filt_TP_FP_compare.Rscript "
-    #    . " __analyze_allow_reverse/all.scored.preds.ROC.best.dat "
-    #    . " __analyze_allow_rev_and_paralogs/all.scored.preds.ROC.best.dat ";
-    # 
-    #$pipeliner->add_commands(new Command($cmd, "before_vs_after_okPara.ok"));
-    #
-    #$pipeliner->run();
+    # plot overall max F1 summaries
     
+    $cmd = "./util/plot_maxF1_vs_pass_n_cov.Rscript";
+    $pipeliner->add_commands(new Command($cmd, "maxF1_vs_pass_n_cov_plots.ok"));
+    
+    $cmd = "./util/plot_breakpoint_maxF1.Rscript";
+    $pipeliner->add_commands(new Command($cmd, "plot_breakpoint_maxF1.ok"));
+    
+    $pipeliner->run();
     
     exit(0);
     
