@@ -1,0 +1,48 @@
+#!/usr/bin/env Rscript
+
+library(tidyverse)
+
+
+# exact brkpt
+exact_brkpt_data = read.table("__breakpoint_exact/combined_results.ROC.tsv", header=T, sep="\t", stringsAsFactors = F)
+
+exact_brkpt_data$coverage_level = factor(exact_brkpt_data$coverage_level, levels=c('cov5', 'cov50'))
+
+exact_brkpt_data$pass_count = factor(exact_brkpt_data$pass_count, levels=c('pass1', 'pass2', 'pass5', 'pass10', 'pass20'))
+
+exact_brkpt_data_maxF1 = exact_brkpt_data %>%  group_by(prog, pass_count, coverage_level) %>%
+        arrange(desc(F1)) %>% filter(row_number() == 1) %>% ungroup()
+
+
+
+# inexact brkpt
+win10_brkpt_data = read.table("__breakpoint_win10/combined_results.ROC.tsv", header=T, sep="\t", stringsAsFactors = F)
+
+win10_brkpt_data$coverage_level = factor(win10_brkpt_data$coverage_level, levels=c('cov5', 'cov50'))
+
+win10_brkpt_data$pass_count = factor(win10_brkpt_data$pass_count, levels=c('pass1', 'pass2', 'pass5', 'pass10', 'pass20'))
+
+win10_brkpt_data_maxF1 = win10_brkpt_data %>%  group_by(prog, pass_count, coverage_level) %>%
+        arrange(desc(F1)) %>% filter(row_number() == 1) %>% ungroup()
+
+
+
+# combine results
+
+combined_results = bind_rows(exact_brkpt_data_maxF1 %>% mutate(analysisType = "Exact Brkpt"),
+                             win10_brkpt_data_maxF1 %>% mutate(analysisType = "Fuzzy Brkpt"))
+
+
+write.table(combined_results, file='breakpoint_maxF1_data.tsv', quote=F, sep="\t", row.names=F)
+
+
+brkpt_accuracy_plot = combined_results %>% ggplot() +
+        geom_point(aes(x=pass_count, y=F1, color=prog)) +
+        geom_line(aes(x=pass_count, y=F1, group=prog, color=prog)) +
+        facet_grid(vars(analysisType), vars(coverage_level)) +
+        ggtitle("Exact or Fuzzy Breakpoint Detection Accuracy") +
+        ylim(0,1)
+
+
+ggsave(brkpt_accuracy_plot, filename="breakpoint_maxF1_summary.pdf", width=8, height=6)
+
