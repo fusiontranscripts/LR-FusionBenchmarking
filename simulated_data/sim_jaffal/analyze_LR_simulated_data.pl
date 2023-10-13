@@ -136,9 +136,13 @@ main: {
 
 
     # generate summary max F1 plots:
-    $cmd = "./util/plot_jaffal_F1_vs_divergence.Rscript";
-    
+    $cmd = "./util/plot_jaffal_F1_vs_divergence.Rscript";    
     $pipeliner->add_commands(new Command($cmd, "maxF1_summary_plots.ok"));
+
+    # generate summary for breakpoint accuracy info:
+    $cmd = "./util/plot_jaffal_breakpoint_accuracy.Rscript";
+    $pipeliner->add_commands(new Command($cmd, "breakpoint_maxF1_summary_plots.ok"));
+
     $pipeliner->run();
     
     

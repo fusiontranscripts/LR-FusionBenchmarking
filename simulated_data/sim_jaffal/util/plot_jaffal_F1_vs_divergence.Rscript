@@ -16,8 +16,12 @@ data = bind_rows(strict_results,
                  allow_revNparalogs_results)
 
 
+
+
+
 max_F1_data = data %>% group_by(analysisType, prog, seqtype, divergence) %>% 
     arrange(desc(F1)) %>% filter(row_number() == 1) %>% ungroup()
+
 
 
 # rank programs 
@@ -45,6 +49,6 @@ p_linepoint = max_F1_data %>%
     geom_line(aes(x=divergence, y=F1, group=prog, color=prog)) +
     facet_grid(vars(analysisType), vars(seqtype))
 
-ggsave(p_linepoint, filename="max_F1_summary.linepoint.pdf", width=8, height=10)
+ggsave(p_linepoint, filename="max_F1_summary.linepoint.pdf", width=8, height=7)
 
 
