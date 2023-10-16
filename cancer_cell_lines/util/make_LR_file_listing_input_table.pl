@@ -37,7 +37,7 @@ while (<STDIN>) {
     my $dataset = $pts[-1];
     my $progname = $pts[-2];
 
-    $dataset =~ s/DepMap_v1r_//;
+    $dataset =~ s/DepMap_v2_//;
     $dataset =~ s/[\._]\S+$//;
     
             
