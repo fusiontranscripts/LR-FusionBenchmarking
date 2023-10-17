@@ -25,7 +25,6 @@ my %prog_to_parser = (
     'pbfusion' => 'PBfusion_parser',
     );
 
-
 sub prog_type_to_file_parser {
     my ($progname) = @_; 
     
@@ -33,17 +32,16 @@ sub prog_type_to_file_parser {
         return($prog_to_parser{$progname});
     }
     else {
-        if ($progname =~ /ctat-LR-fusion/i) {
-            return($prog_to_parser{'ctat-LR-fusion'});
+        foreach my $prog (keys %prog_to_parser) {
+            if ($progname =~ /$prog/) {
+                return($prog_to_parser{$prog});
+            }
         }
-        elsif ($progname =~ /pbfusion/) {
-            return($prog_to_parser{'pbfusion'});
-        }
-        else {
-            confess "Error, no parser found for $progname";
-        }
+        
+        confess "Error, no parser found for $progname";
     }
 }
+
 
 foreach my $module (values %prog_to_parser) {
     my $module_path = "$fusion_prog_parser_lib_dir/$module.pm";

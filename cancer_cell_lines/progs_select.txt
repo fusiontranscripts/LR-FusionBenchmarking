@@ -3,3 +3,4 @@ fusionseeker
 JAFFAL
 LongGF
 pbfusion_v0.3.1
+flairfusion_v1mod

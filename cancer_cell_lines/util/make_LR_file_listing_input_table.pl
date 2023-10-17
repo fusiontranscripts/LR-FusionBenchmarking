@@ -38,9 +38,10 @@ while (<STDIN>) {
     my $progname = $pts[-2];
 
     $dataset =~ s/DepMap_v2_//;
+    $dataset =~ s/DepMap_v1v2mrgd_//;
     $dataset =~ s/[\._]\S+$//;
     
-            
+    
     if (%restrict_progs && ! exists $restrict_progs{$progname}) {
         print STDERR "make_file_listing_input_table::  - skipping $filename, not in restricted list.\n";
         next;

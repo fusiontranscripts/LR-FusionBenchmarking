@@ -16,7 +16,8 @@ data = bind_rows(strict_results,
                  allow_revNparalogs_results)
 
 
-data = data %>% filter(prog %in% c('flairfusion',
+data = data %>% filter(prog %in% c('flairfusion_v1mods',
+                                   #'flairfusion',
                                    'pbfusion_v0.3.1',
                                    'fusionseeker_s1',
                                    'LongGF',
