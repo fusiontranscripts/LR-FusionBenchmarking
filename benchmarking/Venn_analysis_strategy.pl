@@ -9,14 +9,58 @@ use File::Basename;
 use lib ("$FindBin::Bin/../PerlLib");
 use Pipeliner;
 use Process_cmd;
+use Getopt::Long qw(:config posix_default no_ignore_case bundling pass_through);
 
 
-my $usage = "\n\n\tusage: $0 preds.filt.final progs.select.file low_agree high_agree\n\n";
+my $usage = <<__EOUSAGE__;
 
-my $preds_file = $ARGV[0] or die $usage;
-my $progs_select_file = $ARGV[1] or die $usage;
-my $low_agree = $ARGV[2] or die $usage;
-my $high_agree = $ARGV[3] or die $usage;
+####################################################################################
+#
+# Required:
+#
+#  --preds_file <string>    preds.filt.final
+#  
+#  --progs_select <string>  progs.select.file
+#
+#  --low <int>              low agree
+#
+#  --hi <int>               high agree
+#
+# Optional:
+#
+#  --extra_true <string>    file containing the additional true entries to include.
+#
+#####################################################################################
+
+
+__EOUSAGE__
+
+    ;
+
+
+my $help_flag;
+my $preds_file;
+my $progs_select_file;
+my $low_agree;
+my $high_agree;
+my $extra_true_preds_file = "";
+
+&GetOptions ( 'h' => \$help_flag,
+              'preds_file=s' => \$preds_file,
+              'progs_select=s' => \$progs_select_file,
+              'low=i' => \$low_agree,
+              'hi=i' => \$high_agree,
+              'extra_true=s' => \$extra_true_preds_file,
+    );
+
+
+if ($help_flag) {
+    die $usage;
+}
+
+unless ($preds_file && $progs_select_file && $low_agree && $high_agree) {
+    die $usage;
+}
 
 
 my $benchmark_data_basedir = "$FindBin::Bin/..";
@@ -45,7 +89,7 @@ main: {
     my @min_agree_truth = ($low_agree .. $high_agree);
     
     foreach my $min_agree (@min_agree_truth) {
-        &score_and_plot("$preds_file.proxy_assignments", "$preds_file.proxy_assignments.byProgAgree", $min_agree);
+        &score_and_plot("$preds_file.proxy_assignments", "$preds_file.proxy_assignments.byProgAgree", $min_agree, $extra_true_preds_file);
     }
     
     ########################
@@ -75,7 +119,7 @@ main: {
 
 ####
 sub score_and_plot {
-    my ($input_file, $prog_agree_listing, $min_agree) = @_;
+    my ($input_file, $prog_agree_listing, $min_agree, $extra_true_preds_file) = @_;
     
     $input_file = &ensure_full_path($input_file);
     $prog_agree_listing = &ensure_full_path($prog_agree_listing);
@@ -95,9 +139,9 @@ sub score_and_plot {
     
     
     # define min agree set:
-    my $cmd = "$benchmark_toolkit_basedir/define_truth_n_unsure_set.pl $prog_agree_listing $min_agree";
+    my $cmd = "$benchmark_toolkit_basedir/define_truth_n_unsure_set.pl $prog_agree_listing $min_agree $extra_true_preds_file";
     $pipeliner->add_commands(new Command($cmd, "define_min${min_agree}_agree.ok"));
-
+    
     $pipeliner->run();
     
     # creates two files:

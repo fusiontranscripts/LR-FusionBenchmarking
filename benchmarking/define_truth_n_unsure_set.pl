@@ -8,13 +8,19 @@ use lib ("$FindBin::Bin/../PerlLib");
 use DelimParser;
 
 
-my $usage = "\n\n\tusage: $0 preds.collected.byProg min_truth\n\n";
+my $usage = "\n\n\tusage: $0 preds.collected.byProg min_truth [extra_truth_preds_file]\n\n";
 
 my $preds_collected = $ARGV[0] or die $usage;
 my $min_truth = $ARGV[1] or die $usage;
+my $extra_truth_preds_file = $ARGV[2];
 
 main: {
     
+    my %extra_true_preds;
+    if ($extra_truth_preds_file) {
+        &populate_extra_truth_preds(\%extra_true_preds, $extra_truth_preds_file);
+    }
+        
     open(my $fh, $preds_collected) or die "Error, cannot open file $preds_collected";
 
     my $delim_parser = new DelimParser::Reader($fh, "\t");
@@ -37,13 +43,18 @@ main: {
         
         my $prog_count = $row->{num_progs};
         
-        if ($prog_count >= $min_truth) {
+        my $proxy_fusion_name = $row->{proxy_fusion_name} or die "Error, no proxy fusion name reported";
+        
+        if ($prog_count >= $min_truth || $extra_true_preds{$proxy_fusion_name} ) {
+            # write truth
             $truth_writer->write_row($row);
         }
         elsif ($prog_count > 1) {
+            # write unsure
             $unsure_writer->write_row($row);
         }
         else {
+            # write unique
             $unique_writer->write_row($row);
         }
     }
@@ -55,3 +66,22 @@ main: {
     
     exit(0);
 }
+
+
+
+####
+sub populate_extra_truth_preds {
+    my ($extra_true_preds_href, $extra_truth_preds_file) = @_;
+
+    open(my $fh, $extra_truth_preds_file) or die "Error, cannot open file: $extra_truth_preds_file";
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
+    while (my $row = $delim_parser->get_row()) {
+        
+        my $proxy_fusion_name = $row->{proxy_fusion_name} or die "Error, no proxy fusion name!";
+        $extra_true_preds_href->{$proxy_fusion_name} = 1;
+    }
+    
+    return;
+}
+
+

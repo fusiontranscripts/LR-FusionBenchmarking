@@ -9,9 +9,45 @@ use File::Basename;
 use lib ("$FindBin::Bin/../PerlLib");
 use Pipeliner;
 use Process_cmd;
+use Getopt::Long qw(:config posix_default no_ignore_case bundling pass_through);
 
 
-my $restricted_progs_file = $ARGV[0] || "";
+my $usage = <<__EOUSAGE__;
+
+
+####################
+#
+# Optional:
+#
+#  --restrict_progs <string>   file containing list of programs to restrict accuracy evaluation to, otherwise all programs used.
+#                               (note, this is separate from the progs_select.txt file, which is used to determine truth sets.)
+#
+#  --extra_true <string>         file containing the additional true entries to include
+#
+#####################
+
+
+__EOUSAGE__
+
+    ;
+
+
+my $help_flag;
+my $restricted_progs_file = "";
+my $extra_true_preds_file;
+
+
+&GetOptions ( 'h' => \$help_flag,
+              'restricted_progs=s' => \$restricted_progs_file,
+              'extra_true=s' => \$extra_true_preds_file,
+    );
+
+
+
+if ($help_flag) {
+    die $usage;
+}
+
 
 unless ($ENV{FUSION_ANNOTATOR}) {
 
@@ -33,6 +69,7 @@ unless ($ENV{TRINITY_HOME}) {
 if (basename(cwd()) ne "cancer_cell_lines") {
     die "Error, must run this while in the cancer_cell_lines/ directory.";
 }
+
 
 my $benchmark_data_basedir = "$FindBin::Bin/..";
 my $benchmark_toolkit_basedir = "$FindBin::Bin/../benchmarking";
@@ -65,18 +102,14 @@ main: {
     $cmd = "$fusion_annotator_basedir/FusionAnnotator --annotate preds.collected.gencode_mapped  -C 2 --include_reciprocal > preds.collected.gencode_mapped.wAnnot";
     $pipeliner->add_commands(new Command($cmd, "annotate_fusions.ok"));
 
-
     # filter HLA and mitochondrial features, and require min read support
     $cmd = "$benchmark_toolkit_basedir/filter_collected_preds.pl preds.collected.gencode_mapped.wAnnot 3 > preds.collected.gencode_mapped.wAnnot.filt";
     $pipeliner->add_commands(new Command($cmd, "filter_fusion_annot.ok"));
 
-    
-    
+        
     # generate and plot correlation matrix for predicted fusions by prog
     $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_matrix.pl preds.collected.gencode_mapped.wAnnot.filt > preds.collected.gencode_mapped.wAnnot.filt.matrix";
     $pipeliner->add_commands(new Command($cmd, "pred_cor_matrix.ok"));
-
-
 
     $cmd = "$trinity_home/Analysis/DifferentialExpression/PtR  -m preds.collected.gencode_mapped.wAnnot.filt.matrix --binary --sample_cor_matrix --heatmap_colorscheme 'black,yellow' ";
     $pipeliner->add_commands(new Command($cmd, "pred_cor_matrix_plot.ok"));
@@ -84,15 +117,19 @@ main: {
     
     ## run Venn-based accuracy analysis:
 
-    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl preds.collected.gencode_mapped.wAnnot.filt progs_select.txt 2 2";
+    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl --preds_file preds.collected.gencode_mapped.wAnnot.filt --progs_select progs_select.txt --low 2 --hi 2 ";
+    if ($extra_true_preds_file) {
+        $cmd .= " --extra_true $extra_true_preds_file";
+    }
+    
     $pipeliner->add_commands(new Command($cmd, "venn_analysis.ok"));
     
     $pipeliner->run();
     
     exit(0);
-    
-    
+        
 }
+
 
 
 ####
