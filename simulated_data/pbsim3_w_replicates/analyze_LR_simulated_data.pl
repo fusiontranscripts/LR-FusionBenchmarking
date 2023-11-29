@@ -38,7 +38,7 @@ my $fusion_annotator_basedir = $ENV{FUSION_ANNOTATOR};
 my $trinity_home = $ENV{TRINITY_HOME};
 
 
-my $sim_truth_set = "$FindBin::Bin/pbsim3.truthset.tsv";
+my $sim_truth_set = "$FindBin::Bin/pbsim3_wreps.truthset.tsv";
 
 my $restrict_progs_file = $ARGV[0] || "";
 
@@ -194,47 +194,8 @@ sub score_and_plot {
     $pipeliner->add_commands(new Command($cmd, "plot_summary.PR.AUC.files.ok"));    
     
 
-
     $pipeliner->run();
 
-    
-
-    ######################################
-    ## generate summary accuracy box plots
-    
-    # my $pipeliner = &init_pipeliner();
-    # 
-    # my $cmd = 'find . -regex ".*.scored.PR.AUC" -exec cat {} \\; > all.AUC.dat';
-    # $pipeliner->add_commands(new Command($cmd, "gather_AUC.ok"));
-    #
-    # $cmd = "$benchmark_toolkit_basedir/plotters/AUC_boxplot.from_single_summary_AUC_file.Rscript all.AUC.dat";
-    # $pipeliner->add_commands(new Command($cmd, "boxplot_rep_aucs.ok"));
-    # 
-    # $cmd = 'find . -regex ".*.scored" -exec cat {} \\; > all.scored.preds';
-    # $pipeliner->add_commands(new Command($cmd, "gather_scores.ok"));
-    # 
-    # $pipeliner->run();
-    
-    
-    # &ROC_and_PR("all.scored.preds");
-        
-    # examine sensitivity vs. expression level
-
-    #if ($fusion_TPMs) {
-    #    $cmd = "$benchmark_toolkit_basedir/fusion_preds_sensitivity_vs_expr.avg_replicates.pl all.scored.preds $fusion_TPMs > all.scored.preds.sensitivity_vs_expr.dat";
-    #    $pipeliner->add_commands(new Command($cmd, "sens_vs_expr.avg_reps.ok"));
-    #    
-    #    $cmd = "$trinity_home/Analysis/DifferentialExpression/PtR  "
-    #        . " -m all.scored.preds.sensitivity_vs_expr.dat "
-    #        . " --heatmap "
-    #        . " --sample_clust none --gene_clust ward "
-    #        . " --heatmap_colorscheme 'black,purple,yellow'";
-    #    $pipeliner->add_commands(new Command($cmd, "sens_expr_heatmap.ok"));
-    #    
-    #    $pipeliner->run();
-    #}
-
-    
     chdir $base_workdir or die "Error, cannot cd back to $base_workdir";
         
     return;
