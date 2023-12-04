@@ -38,6 +38,9 @@ max_F1_data$prog = factor(max_F1_data$prog, levels=ranked_progs$prog)
 max_F1_data$analysisType = factor(max_F1_data$analysisType, levels=c('strict', 'allow_reverse', 'allow_revNparalogs'))
 
 
+write.table(max_F1_data, "max_F1_summary.tsv", sep="\t", row.names=F, quote=F)
+
+
 # barplot
 
 p_barplot = max_F1_data %>% ggplot(aes(x=factor(pass_count), y=F1)) +
