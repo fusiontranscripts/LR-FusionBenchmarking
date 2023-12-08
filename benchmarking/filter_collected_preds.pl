@@ -17,6 +17,26 @@ open (my $fh, $preds_file) or die "Error, cannot open file $preds_file";
 my $delim_parser_reader = new DelimParser::Reader($fh, "\t");
 my @column_headers = $delim_parser_reader->get_column_headers();
 
+
+# retain cosmic in either orientation as long as reported in proper orientation at least once.
+
+my %retain_cosmic_any_orient;
+
+while(my $row = $delim_parser_reader->get_row()) {
+    my $fusion_name = $row->{fusion};
+    my $annot = $row->{annots}; 
+
+    if ($annot =~ /cosmic/i) {
+        my ($geneA, $geneB) = split(/--|::/, $fusion_name);
+        $retain_cosmic_any_orient{$fusion_name} = 1;
+        $retain_cosmic_any_orient{"$geneB--$geneA"} = 1;
+        $retain_cosmic_any_orient{"$geneB\:\:$geneA"} = 1;
+    }
+}
+
+
+open ($fh, $preds_file) or die "Error, cannot open file $preds_file";
+$delim_parser_reader = new DelimParser::Reader($fh, "\t");
 my $delim_writer = new DelimParser::Writer(*STDOUT, "\t", \@column_headers);
 
 while(my $row = $delim_parser_reader->get_row()) {
@@ -30,32 +50,37 @@ while(my $row = $delim_parser_reader->get_row()) {
         next;
     }
     
+    if ( (! exists $retain_cosmic_any_orient{$fusion_name}) 
+         
+         && 
 
-    if ($fusion_name =~ /(^HLA\-)|\-HLA\-/ 
-        ||
+       (  
+          $fusion_name =~ /(^HLA\-)|\-HLA\-/ 
+          ||
         
-        $breakpoint =~ /chrM:/
-
-        ||
-        
-        (defined($annot) && 
-
-         ($annot =~ /NEIGHBOR/
+          $breakpoint =~ /chrM:/
+          
           ||
-          $annot =~ /chrM\b/
-          ||
-          $annot =~ /BLAST/
-          ||
-          $annot =~ /GTEx|BodyMap|DGD_PARALOGS|HGNC_GENEFAM|Greger_Normal|Babiceanu_Normal|ConjoinG/
-          ||
-          $fusion_name =~ /IG[HKL].*--IG[HKL]/   
-         )
+          
+          (defined($annot) && 
+           
+           ($annot =~ /NEIGHBOR/
+            ||
+            $annot =~ /chrM\b/
+            ||
+            $annot =~ /BLAST/
+            ||
+            $annot =~ /GTEx|BodyMap|DGD_PARALOGS|HGNC_GENEFAM|Greger_Normal|Babiceanu_Normal|ConjoinG/
+            ||
+            $fusion_name =~ /IG[HKL].*--IG[HKL]/   
+           )
+          )
         )
-        ) 
+      ) 
     {
         next;
     }
-
+    
     # passed
     $delim_writer->write_row($row);
 }
