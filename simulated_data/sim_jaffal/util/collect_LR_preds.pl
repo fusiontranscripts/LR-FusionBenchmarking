@@ -21,7 +21,9 @@ my %prog_to_parser = (
     'fusionseeker' => 'FusionSeeker_parser',
     'JAFFAL' => 'JAFFAL_parser',
     'LongGF' => 'LongGF_parser',
-    'pbfusion' => 'PBfusion_parser',
+    'pbfusion_v0.3' => 'PBfusion_parser_v3',
+    'pbfusion_v0.2' => 'PBfusion_parser_v3',
+    'pbfusion_v0.4' => 'PBfusion_parser_v4'
     );
 
 
@@ -77,7 +79,7 @@ main: {
         #print(Dumper(\@fusions));
         
         unless (@fusions) {
-            die "Error, no fusions reported for $line";
+            print STDERR "Error, no fusions reported for $line";
         }
         
         @fusions = reverse sort { $a->{num_reads} <=> $b->{num_reads} } @fusions;
