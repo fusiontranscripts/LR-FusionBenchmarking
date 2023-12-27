@@ -93,6 +93,7 @@ sub parse_fusion_result_file {
             if ($breakpoint =~ /^([^\:]+):(\d+)([\+\-])$/) {
                 my $chrom = $1;
                 my $pos = $2;
+                $pos += 1;
                 my $orient = $3;
                 return($chrom, $pos, $orient);
             }
@@ -128,7 +129,7 @@ sub parse_fusion_result_file {
 
                 my $token = join("^^^", sort {$a cmp $b} ($geneA, $geneB, $breakpointA, $breakpointB));
                 
-                print STDERR "TOKEN: $token\n";
+                #print STDERR "TOKEN: $token\n";
                 
                 if ( (! exists $unique_fusions{$token} ) || ( $unique_fusions{$token} < $num_reads) ) {
                     
