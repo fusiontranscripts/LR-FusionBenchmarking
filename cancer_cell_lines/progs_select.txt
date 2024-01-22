@@ -2,6 +2,6 @@ ctat-LR-fusion.v0.12.0
 fusionseeker
 JAFFAL
 LongGF
-pbfusion_v0.4.0
-#pbfusion_v0.3.1
+#pbfusion_v0.4.0
+pbfusion_v0.3.1
 #flairfusion_v1mod
