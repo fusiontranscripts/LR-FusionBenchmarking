@@ -106,18 +106,22 @@ main: {
     $cmd = "$benchmark_toolkit_basedir/filter_collected_preds.pl preds.collected.gencode_mapped.wAnnot 3 > preds.collected.gencode_mapped.wAnnot.filt";
     $pipeliner->add_commands(new Command($cmd, "filter_fusion_annot.ok"));
 
+    # filter out messy fusions (those containing genes predicted in fusions by multiple programs across multple samples
+    $cmd = "$benchmark_toolkit_basedir/exclude_messy_fusions.pl  preds.collected.gencode_mapped.wAnnot.filt progs_select.txt ";
+    $pipeliner->add_commands(new Command($cmd, "filter_messy.ok"));
+    
         
     # generate and plot correlation matrix for predicted fusions by prog
-    $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_matrix.pl preds.collected.gencode_mapped.wAnnot.filt > preds.collected.gencode_mapped.wAnnot.filt.matrix";
+    $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_matrix.pl preds.collected.gencode_mapped.wAnnot.filt.pass > preds.collected.gencode_mapped.wAnnot.filt.pass.matrix";
     $pipeliner->add_commands(new Command($cmd, "pred_cor_matrix.ok"));
 
-    $cmd = "$trinity_home/Analysis/DifferentialExpression/PtR  -m preds.collected.gencode_mapped.wAnnot.filt.matrix --binary --sample_cor_matrix --heatmap_colorscheme 'black,yellow' ";
+    $cmd = "$trinity_home/Analysis/DifferentialExpression/PtR  -m preds.collected.gencode_mapped.wAnnot.filt.pass.matrix --binary --sample_cor_matrix --heatmap_colorscheme 'black,yellow' ";
     $pipeliner->add_commands(new Command($cmd, "pred_cor_matrix_plot.ok"));
 
     
     ## run Venn-based accuracy analysis:
 
-    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl --preds_file preds.collected.gencode_mapped.wAnnot.filt --progs_select progs_select.txt --low 2 --hi 2 ";
+    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl --preds_file preds.collected.gencode_mapped.wAnnot.filt.pass --progs_select progs_select.txt --low 2 --hi 2 ";
     if ($extra_true_preds_file) {
         $cmd .= " --extra_true $extra_true_preds_file";
     }

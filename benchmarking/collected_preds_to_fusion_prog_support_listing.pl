@@ -40,14 +40,18 @@ main: {
         my $sample_name = $row->{sample};
         my $prog = $row->{prog};
         
-        unless ($progs_to_consider{$prog}) { next; }
+
         
         my $fusion_name = $row->{fusion};
         my $sample_fusion_name = "${sample_name}|${fusion_name}";
         $row->{sample_fusion_name} = $sample_fusion_name;
-        $fusion_name_prog_counter{$sample_fusion_name}->{$prog} = 1;
         
         push (@rows, $row);
+    
+        if ($progs_to_consider{$prog}) {
+            $fusion_name_prog_counter{$sample_fusion_name}->{$prog} = 1;
+        }
+        
     }
     close $fh;
     
