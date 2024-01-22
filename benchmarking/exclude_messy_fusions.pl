@@ -96,7 +96,7 @@ sub examine_for_messy_gene {
             # multiple progws
             foreach my $prog (@progs) {
                 my @samples = keys %{$gene_to_prog{$gene}->{$prog}};
-                if (scalar(@samples) > 1) {
+                if (scalar(@samples) >= 3) {
                     # and multiple samples
                     push (@messy, "$gene^$prog^" . join(",", @samples));
                 }
