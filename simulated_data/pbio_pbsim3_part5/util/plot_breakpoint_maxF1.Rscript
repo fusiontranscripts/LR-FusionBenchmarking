@@ -29,14 +29,21 @@ win10_brkpt_data_maxF1 = win10_brkpt_data %>%  group_by(prog, rep_num, pass_coun
 
 # combine results
 
-combined_results = bind_rows(exact_brkpt_data_maxF1 %>% mutate(analysisType = "Exact Brkpt"),
+combined_results = bind_rows(exact_brkpt_data  %>% mutate(analysisType = "Exact Brkpt"),
+                             win10_brkpt_data %>% mutate(analysisType = "Fuzzy Brkpt") )
+
+
+write.table(combined_results, "breakpoint_all_results.tsv", quote=F, sep="\t", row.names=F)
+
+
+combined_results_maxF1 = bind_rows(exact_brkpt_data_maxF1 %>% mutate(analysisType = "Exact Brkpt"),
                              win10_brkpt_data_maxF1 %>% mutate(analysisType = "Fuzzy Brkpt"))
 
 
-write.table(combined_results, file='breakpoint_maxF1_data.tsv', quote=F, sep="\t", row.names=F)
+write.table(combined_results_maxF1, file='breakpoint_maxF1_data.tsv', quote=F, sep="\t", row.names=F)
 
 
-brkpt_accuracy_plot = combined_results %>% ggplot() +
+brkpt_accuracy_plot = combined_results_maxF1 %>% ggplot() +
         geom_point(aes(x=pass_count, y=F1, color=prog)) +
         geom_line(aes(x=pass_count, y=F1, group=prog, color=prog)) +
         facet_grid(vars(analysisType), vars(coverage_level)) +

@@ -16,7 +16,7 @@ data = bind_rows(strict_results,
                  allow_revNparalogs_results)
 
 
-
+write.table(data, "all_combined_results.ROC.tsv", sep="\t", row.names=F, quote=F)
 
 
 max_F1_data = data %>% group_by(analysisType, prog, rep_num, coverage_level, pass_count, sample_count) %>%
