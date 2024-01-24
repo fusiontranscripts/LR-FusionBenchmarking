@@ -52,6 +52,9 @@ sub parse_fusion_result_file {
     }
     
     my %unique_fusions;
+
+    my $num_fusions = 0;
+    my $num_problem_fusions = 0;
     
     while(my $line = <$fh>) {
         
@@ -59,6 +62,8 @@ sub parse_fusion_result_file {
         chomp $line;
         my @vals = split(/\t/, $line);
         
+        $num_fusions += 1;
+
         #my $chrA = $vals[0];
         #my $orientA = $vals[8];
         #my $coordA = ($orientA eq "+") ? $vals[2] : $vals[1];
@@ -84,6 +89,7 @@ sub parse_fusion_result_file {
         
         unless (scalar(@breakpoints) == scalar(@genes)-1 ) {
             print STDERR "\n\nPBFv4 Error, diff number of breakpoints and genes parsed from: $info\n\n";
+            $num_problem_fusions += 1;
             next;
         }
         
@@ -150,7 +156,12 @@ sub parse_fusion_result_file {
 
 
     my @fusions = values %unique_fusions;
+
+
+    my $frac_failed = sprintf("%.1f", $num_problem_fusions / $num_fusions * 100);
+    print STDERR "\n\n** PBFUSION_v4 Parse stats: total fusion: $num_fusions, and $num_problem_fusions ignored due to multiple gene pairs = $frac_failed % for $file\n\n\n"; 
     
+        
     return(@fusions);
 }
 

@@ -49,9 +49,15 @@ sub parse_fusion_result_file {
 
 
     my @fusions;
+
+
+    my $num_fusions = 0;
+    my $num_problem_fusions = 0;
     
     while(my $line = <$fh>) {
         
+        $num_fusions += 1;
+
         if ($line =~ /^\#/) { next; }
         chomp $line;
         my @vals = split(/\t/, $line);
@@ -71,6 +77,7 @@ sub parse_fusion_result_file {
             my @genes = split(/,/, $2);
             if (scalar @genes > 2) {
                 print STDERR "Error, not sure how to handle multiple gene pairs: @genes\n\n$line\n";
+                $num_problem_fusions += 1;
                 next;
             }
             ($geneA, $geneB) = @genes;
@@ -91,6 +98,11 @@ sub parse_fusion_result_file {
     
     close $fh;
 
+
+    my $frac_failed = sprintf("%.1f", $num_problem_fusions / $num_fusions * 100);
+    print STDERR "\n\n** PBFUSION_v3 Parse stats: total fusion: $num_fusions, and $num_problem_fusions ignored due to multiple gene pairs = $frac_failed % for $file\n\n\n"; 
+    
+    
     return(@fusions);
 }
 
