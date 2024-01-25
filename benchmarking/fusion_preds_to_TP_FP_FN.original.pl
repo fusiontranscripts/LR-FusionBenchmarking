@@ -276,6 +276,11 @@ sub classify_fusion_prediction {
             $fusion_selected = $fusion_name;
             if ($using_para_proxy) {
                 $accuracy_explanation .= " (para of $using_para_proxy)";
+                # exclude the para proxy as a FN in case it shows up too!
+                if (exists $TP_fusions{$using_para_proxy}) {
+                    my $para_proxy_prog_fusion = join(",", $prog_name, $using_para_proxy);
+                    $seen_progTP{$para_proxy_prog_fusion} = 1;
+                }
             }
             last;
         }
