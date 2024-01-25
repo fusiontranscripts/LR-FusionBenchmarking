@@ -322,7 +322,7 @@ sub parse_fusion_listing {
     open (my $fh, $fusions_file) or die "Error, cannot open file $fusions_file";
     my $delim_parser = new DelimParser::Reader($fh, "\t");
     while(my $row = $delim_parser->get_row()) {
-        my $proxy_fusion_name = $row->{proxy_fusion_name};
+        my $proxy_fusion_name = uc $row->{proxy_fusion_name}; # ensure case-insensitive
         $fusions{$proxy_fusion_name} = 1;
         
     }
