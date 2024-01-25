@@ -20,6 +20,8 @@ main: {
         while (<$fh>) {
             s/^\s+|\s+$//g;
             my $prog = $_;
+            if ($prog =~ /^\#/) { next; }
+            
             $progs_to_consider{$prog} = 1;
         }
         close $fh;
@@ -114,8 +116,12 @@ main: {
     foreach my $row (@rows) {
         my $proxy_fusion_name = $row->{proxy_fusion_name};
         my $prog = $row->{prog};
-        $fusion_to_prog{$proxy_fusion_name}->{$prog} = 1;
-    
+
+        if ($progs_to_consider{$prog}) {
+            # count towards truth set definition
+            $fusion_to_prog{$proxy_fusion_name}->{$prog} = 1;
+        }
+        
         $tab_writer->write_row($row);
     }
     close $ofh;
@@ -148,7 +154,7 @@ main: {
                    ) . "\n";
                 
     }
-
+    
     exit(0);
 }
 

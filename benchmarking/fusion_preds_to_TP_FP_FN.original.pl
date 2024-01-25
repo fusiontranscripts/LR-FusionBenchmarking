@@ -228,7 +228,7 @@ sub classify_fusion_prediction {
 
         my $using_para_proxy = undef;
         
-        if ($ALLOW_PARALOGS && exists $paralog_fusion_to_TP_fusion{$fusion_name}) {
+        if ($ALLOW_PARALOGS && (! exists $TP_fusions{$fusion_name}) && exists $paralog_fusion_to_TP_fusion{$fusion_name}) {
 
             my $para_fusion_name = $paralog_fusion_to_TP_fusion{$fusion_name};
 
