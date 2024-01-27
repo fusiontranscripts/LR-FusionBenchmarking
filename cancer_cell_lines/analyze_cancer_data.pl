@@ -121,7 +121,7 @@ main: {
     
     ## run Venn-based accuracy analysis:
 
-    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl --preds_file preds.collected.gencode_mapped.wAnnot.filt.pass --progs_select progs_select.txt --low 2 --hi 2 ";
+    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl --preds_file preds.collected.gencode_mapped.wAnnot.filt.pass --progs_select progs_select.txt --low 2 --hi 3 ";
     if ($extra_true_preds_file) {
         $cmd .= " --extra_true $extra_true_preds_file";
     }

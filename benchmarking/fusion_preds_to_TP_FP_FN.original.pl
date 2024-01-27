@@ -5,6 +5,7 @@ use warnings;
 use FindBin;
 use lib ("$FindBin::Bin/../PerlLib");
 use DelimParser;
+use Data::Dumper;
 
 use Getopt::Long qw(:config posix_default no_ignore_case bundling pass_through);
 
@@ -86,9 +87,9 @@ if ($unsure_fusions_file) {
 my %FP_progFusions;
 my %seen_progTP;
 
-my %paralog_fusion_to_TP_fusion;
+my %paralog_fusion_to_TP_fusions;
 if ($ALLOW_PARALOGS) {
-    %paralog_fusion_to_TP_fusion = &parse_paralogs_integrate_parafusions(\%TP_fusions, $paralogs_file);
+    %paralog_fusion_to_TP_fusions = &parse_paralogs_integrate_parafusions(\%TP_fusions, $paralogs_file);
 }
 
 
@@ -165,8 +166,36 @@ main : {
         foreach my $fusion_name (keys %TP_fusions) {
             if (! $seen_progTP{"$prog_name,$fusion_name"}) {
 
+
                 my ($sample_name, $geneA, $geneB) = &decode_fusion($fusion_name);
                 my $core_fusion_name = join("--", $geneA, $geneB);
+
+
+                my $pred_result = "FN";
+                my $explanation = "prediction_lacking";
+                # check if has a paralog fusion already identified as a TP
+                if ($ALLOW_PARALOGS) {
+                    
+                    #print STDERR Dumper(\%paralog_fusion_to_TP_fusions);
+                    #die;
+
+                    if (my $para_fusions_href = $paralog_fusion_to_TP_fusions{$fusion_name}) {
+
+                        # print STDERR "$fusion_name -> para: " . Dumper($para_fusions_href);
+                        
+
+                        my @para_fusions = keys %$para_fusions_href;
+                        foreach my $para_fusion (@para_fusions) {
+                            my $para_prog_fusion = "$prog_name,$para_fusion";
+                            if ($seen_progTP{$para_prog_fusion}) {
+                                $pred_result = "NA-FN";
+                                $explanation = "found as $para_prog_fusion, so not a FN";
+                                last;
+                            }
+                        }
+                    }
+                }
+                
                 
                 my %row_hash = map { $_ => "." } @column_headers;
                 
@@ -174,10 +203,11 @@ main : {
                 
                 $row->{sample} = $sample_name;
                 $row->{prog} = $prog_name;
-                $row->{proxy_fusion_name} = $row->{fusion} = $fusion_name;
+                $row->{proxy_fusion_name} = $fusion_name;
+                $row->{fusion} = $core_fusion_name; 
                 $row->{num_reads} = 0;
-                $row->{pred_result} = "FN";
-                $row->{explanation} = "prediction_lacking";
+                $row->{pred_result} = $pred_result;
+                $row->{explanation} = $explanation;
                 $row->{selected_fusion} = ".";
                 
                 $tab_writer->write_row($row);
@@ -228,10 +258,10 @@ sub classify_fusion_prediction {
 
         my $using_para_proxy = undef;
         
-        if ($ALLOW_PARALOGS && (! exists $TP_fusions{$fusion_name}) && exists $paralog_fusion_to_TP_fusion{$fusion_name}) {
+        if ($ALLOW_PARALOGS && (! exists $TP_fusions{$fusion_name}) && exists $paralog_fusion_to_TP_fusions{$fusion_name}) {
 
-            my $para_fusion_name = $paralog_fusion_to_TP_fusion{$fusion_name};
-
+            my $para_fusion_name = (keys %{$paralog_fusion_to_TP_fusions{$fusion_name}})[0];
+            
             if ($fusion_name ne $para_fusion_name) {
                 $using_para_proxy = $fusion_name;
                 # now set as fusion name to use in analysis below
@@ -381,7 +411,7 @@ sub parse_paralogs_integrate_parafusions {
 
                 my $para_fusion = "$sample|$gA--$gB";
                 
-                $paralog_fusion_to_orig_fusion{$para_fusion} = $orig_fusion;
+                $paralog_fusion_to_orig_fusion{$para_fusion}->{$orig_fusion} = 1;
                 
             }
         }

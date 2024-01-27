@@ -31,9 +31,9 @@ while(<$fh>) {
     }
     $progs_select{$_} = 1;
 }
+close $fh;
 
-
-open(my $fh, $fusion_preds_file) or die $!;
+open($fh, $fusion_preds_file) or die $!;
 my $delim_parser = new DelimParser::Reader($fh, "\t");
 
 my @column_headers = $delim_parser->get_column_headers();
