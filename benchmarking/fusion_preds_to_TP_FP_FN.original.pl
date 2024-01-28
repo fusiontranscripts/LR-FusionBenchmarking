@@ -170,7 +170,8 @@ main : {
                 my ($sample_name, $geneA, $geneB) = &decode_fusion($fusion_name);
                 my $core_fusion_name = join("--", $geneA, $geneB);
 
-
+                my $selected_fusion = ".";
+                
                 my $pred_result = "FN";
                 my $explanation = "prediction_lacking";
                 # check if has a paralog fusion already identified as a TP
@@ -190,6 +191,7 @@ main : {
                             if ($seen_progTP{$para_prog_fusion}) {
                                 $pred_result = "NA-FN";
                                 $explanation = "found as $para_prog_fusion, so not a FN";
+                                $selected_fusion = $fusion_name;
                                 last;
                             }
                         }
@@ -208,7 +210,7 @@ main : {
                 $row->{num_reads} = 0;
                 $row->{pred_result} = $pred_result;
                 $row->{explanation} = $explanation;
-                $row->{selected_fusion} = ".";
+                $row->{selected_fusion} = $selected_fusion;
                 
                 $tab_writer->write_row($row);
                 
