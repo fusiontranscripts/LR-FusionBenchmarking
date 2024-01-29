@@ -157,11 +157,15 @@ sub parse_fusion_result_file {
 
     my @fusions = values %unique_fusions;
 
-
-    my $frac_failed = sprintf("%.1f", $num_problem_fusions / $num_fusions * 100);
-    print STDERR "\n\n** PBFUSION_v4 Parse stats: total fusion: $num_fusions, and $num_problem_fusions ignored due to multiple gene pairs = $frac_failed % for $file\n\n\n"; 
     
-        
+    if ($num_fusions > 0) {
+        my $frac_failed = sprintf("%.1f", $num_problem_fusions / $num_fusions * 100);
+        print STDERR "\n\n** PBFUSION_v4 Parse stats: total fusion: $num_fusions, and $num_problem_fusions ignored due to multiple gene pairs = $frac_failed % for $file\n\n\n"; 
+    }
+    else {
+        print STDERR "\n\n** WARNING: no fusions parsed for $file with pbfusion v4\n";
+    }
+    
     return(@fusions);
 }
 

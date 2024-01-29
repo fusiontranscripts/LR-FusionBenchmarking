@@ -76,18 +76,24 @@ main: {
         my $proxy_fusion_type;
 
         
-        if ($count_progs_sample_fusion_name  > 1 && $count_progs_sample_fusion_name == $count_progs_recip_sample_fusion_name) {
+        # check tie
+        if ($count_progs_sample_fusion_name == $count_progs_recip_sample_fusion_name) {
             $proxy_fusion_name = ($sample_fusion_name lt $recip_sample_fusion_name) ? $sample_fusion_name : $recip_sample_fusion_name;
             $proxy_fusion_type = "tie_lt";
         }
+        
+        # check incoming > recip
         elsif ($count_progs_sample_fusion_name > 1 && $count_progs_sample_fusion_name > $count_progs_recip_sample_fusion_name) {
             $proxy_fusion_name = $sample_fusion_name;
             $proxy_fusion_type = "dominant_choice";
         }
+        # check recip dominant
         elsif ($count_progs_recip_sample_fusion_name > 1) {
             $proxy_fusion_name = $recip_sample_fusion_name;
             $proxy_fusion_type = "recip_selected";
         }
+
+        # appears to be unique - check the overlapping genes for a recognizable fusion
         else {
             if (my $alt_fusion_name = &examine_overlapping_genes_for_fusion_name($sample_fusion_name, $sample_name, \%fusion_name_prog_counter, 
                                                                                  $mapped_gencode_A_gene_list, $mapped_gencode_B_gene_list) ) {
@@ -104,8 +110,7 @@ main: {
         $row->{proxy_fusion_type} = $proxy_fusion_type;
 
     }
-
-
+    
     # get prog to proxy fusion info:
     my $proxy_fusion_file = "$preds_file.proxy_assignments";
     open(my $ofh, ">$proxy_fusion_file") or die "Error, cannot write $proxy_fusion_file";

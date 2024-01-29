@@ -79,6 +79,11 @@ sub populate_extra_truth_preds {
         
         my $proxy_fusion_name = $row->{proxy_fusion_name} or die "Error, no proxy fusion name!";
         $extra_true_preds_href->{$proxy_fusion_name} = 1;
+        
+        # allow lex sorted version too
+        my $lex_sorted_fusion_name = $row->{lex_ordered_fusion_name} or die "Error, missing lex_ordered_fusion_name for xtra ";
+        $extra_true_preds_href->{$lex_sorted_fusion_name} = 1;
+        
     }
     
     return;
