@@ -1,0 +1,31 @@
+/home/ubuntu/LR_Fusion_Benchmarking/LR-fusion-tools/LongGF/ONTfussim85err.fastq.gz.bam /home/ubuntu/LR_Fusion_Benchmarking/LR-fusion-tools/LongGF/gencode.v22.chr_patch_hapl_scaff.annotation.gtf 100 50 100 0
+Open sam file (/home/ubuntu/LR_Fusion_Benchmarking/LR-fusion-tools/LongGF/ONTfussim85err.fastq.gz.bam).
+Read sam file (/home/ubuntu/LR_Fusion_Benchmarking/LR-fusion-tools/LongGF/ONTfussim85err.fastq.gz.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.35s
+For all reads: reads=16894/17530(96.37) bases=32001991/37064790(86.34) ins=1431311(3.86) del=1597381(4.31)
+	 N10: 6286
+	 N20: 4504
+	 N30: 3864
+	 N40: 3194
+	 N50: 2790
+	 N60: 2329
+	 N70: 1965
+	 N80: 1460
+	 N90: 1081
+For mapped reads: bases=32001991/36591634(87.46) ins=1431311(3.91) del=1597381(4.37)
+	 N10: 6302
+	 N20: 4535
+	 N30: 3876
+	 N40: 3206
+	 N50: 2815
+	 N60: 2342
+	 N70: 1983
+	 N80: 1495
+	 N90: 1095
+
+# reads with multipe mapping = 11346=11347/17530(64.73)
+Open sam file (/home/ubuntu/LR_Fusion_Benchmarking/LR-fusion-tools/LongGF/ONTfussim85err.fastq.gz.bam).
+Read sam file (/home/ubuntu/LR_Fusion_Benchmarking/LR-fusion-tools/LongGF/ONTfussim85err.fastq.gz.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Error!! not equal for fbc6c67f-007c-119d-f3d0-12deef5e020c 2==1

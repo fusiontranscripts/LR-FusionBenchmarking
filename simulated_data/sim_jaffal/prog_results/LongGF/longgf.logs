@@ -1,0 +1,326 @@
+/home/jupyter/test/ONT_fus_sim_75err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/ONT_fus_sim_75err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_75err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.33s
+For all reads: reads=11043/11043(100.00) bases=15005439/28819538(52.07) ins=1005771(3.49) del=1116770(3.88)
+	 N10: 6265
+	 N20: 5727
+	 N30: 4552
+	 N40: 4003
+	 N50: 3308
+	 N60: 2731
+	 N70: 2258
+	 N80: 1902
+	 N90: 1446
+For mapped reads: bases=15005439/28819538(52.07) ins=1005771(3.49) del=1116770(3.88)
+	 N10: 6265
+	 N20: 5727
+	 N30: 4552
+	 N40: 4003
+	 N50: 3308
+	 N60: 2731
+	 N70: 2258
+	 N80: 1902
+	 N90: 1446
+
+# reads with multipe mapping = 2=3/11043(0.03)
+Open sam file (/home/jupyter/test/ONT_fus_sim_75err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_75err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Error!! not equal for adb85f50-9381-23c7-a650-bfbfd93ddf5d 2==3
+Error!! not equal for fa6e4453-d7a6-2fb5-d1be-36dd1b6efbfa 2==3
+Time consumed to read bam: 0.26s
+Finish _fg_cand[_gene_pair=0
+Potential_fusion: 0 0
+/home/jupyter/test/ONT_fus_sim_80err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/ONT_fus_sim_80err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_80err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.46s
+For all reads: reads=14478/14478(100.00) bases=23402353/34588640(67.66) ins=1270190(3.67) del=1515403(4.38)
+	 N10: 7606
+	 N20: 6138
+	 N30: 4485
+	 N40: 3334
+	 N50: 2759
+	 N60: 2411
+	 N70: 2015
+	 N80: 1654
+	 N90: 1284
+For mapped reads: bases=23402353/34588640(67.66) ins=1270190(3.67) del=1515403(4.38)
+	 N10: 7606
+	 N20: 6138
+	 N30: 4485
+	 N40: 3334
+	 N50: 2759
+	 N60: 2411
+	 N70: 2015
+	 N80: 1654
+	 N90: 1284
+
+# reads with multipe mapping = 2=2/14478(0.01)
+Open sam file (/home/jupyter/test/ONT_fus_sim_80err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_80err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Time consumed to read bam: 0.36s
+Finish _fg_cand[_gene_pair=0
+Potential_fusion: 0 0
+/home/jupyter/test/ONT_fus_sim_85err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/ONT_fus_sim_85err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_85err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.51s
+For all reads: reads=16165/16165(100.00) bases=28962808/35793771(80.92) ins=1182361(3.30) del=1395125(3.90)
+	 N10: 6367
+	 N20: 4593
+	 N30: 3898
+	 N40: 3227
+	 N50: 2850
+	 N60: 2371
+	 N70: 2039
+	 N80: 1543
+	 N90: 1114
+For mapped reads: bases=28962808/35793771(80.92) ins=1182361(3.30) del=1395125(3.90)
+	 N10: 6367
+	 N20: 4593
+	 N30: 3898
+	 N40: 3227
+	 N50: 2850
+	 N60: 2371
+	 N70: 2039
+	 N80: 1543
+	 N90: 1114
+
+# reads with multipe mapping = 0=1/16165(0.01)
+Open sam file (/home/jupyter/test/ONT_fus_sim_85err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_85err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Time consumed to read bam: 0.39s
+Finish _fg_cand[_gene_pair=0
+Potential_fusion: 0 0
+/home/jupyter/test/ONT_fus_sim_90err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/ONT_fus_sim_90err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_90err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.52s
+For all reads: reads=16871/16871(100.00) bases=32998151/36780344(89.72) ins=967346(2.63) del=1092790(2.97)
+	 N10: 7138
+	 N20: 5183
+	 N30: 3912
+	 N40: 3209
+	 N50: 2659
+	 N60: 2365
+	 N70: 2006
+	 N80: 1620
+	 N90: 1141
+For mapped reads: bases=32998151/36780344(89.72) ins=967346(2.63) del=1092790(2.97)
+	 N10: 7138
+	 N20: 5183
+	 N30: 3912
+	 N40: 3209
+	 N50: 2659
+	 N60: 2365
+	 N70: 2006
+	 N80: 1620
+	 N90: 1141
+
+# reads with multipe mapping = 2=3/16871(0.02)
+Open sam file (/home/jupyter/test/ONT_fus_sim_90err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_90err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Error!! not equal for 5885ad96-7f5e-577e-7c0e-51b97dcfc290 2==1
+/home/jupyter/test/ONT_fus_sim_95err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/ONT_fus_sim_95err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_95err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.53s
+For all reads: reads=17632/17632(100.00) bases=39532984/41015199(96.39) ins=775000(1.89) del=748052(1.82)
+	 N10: 6011
+	 N20: 4814
+	 N30: 4211
+	 N40: 3506
+	 N50: 2995
+	 N60: 2608
+	 N70: 2199
+	 N80: 1778
+	 N90: 1200
+For mapped reads: bases=39532984/41015199(96.39) ins=775000(1.89) del=748052(1.82)
+	 N10: 6011
+	 N20: 4814
+	 N30: 4211
+	 N40: 3506
+	 N50: 2995
+	 N60: 2608
+	 N70: 2199
+	 N80: 1778
+	 N90: 1200
+
+# reads with multipe mapping = 0=1/17632(0.01)
+Open sam file (/home/jupyter/test/ONT_fus_sim_95err_pbmm2.bam).
+Read sam file (/home/jupyter/test/ONT_fus_sim_95err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Time consumed to read bam: 0.43s
+Finish _fg_cand[_gene_pair=0
+Potential_fusion: 0 0
+/home/jupyter/test/Pac_fus_sim_75err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/Pac_fus_sim_75err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_75err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.35s
+For all reads: reads=11928/11928(100.00) bases=15805118/30760615(51.38) ins=1207188(3.92) del=1119797(3.64)
+	 N10: 6338
+	 N20: 5712
+	 N30: 4522
+	 N40: 4005
+	 N50: 3263
+	 N60: 2707
+	 N70: 2190
+	 N80: 1864
+	 N90: 1409
+For mapped reads: bases=15805118/30760615(51.38) ins=1207188(3.92) del=1119797(3.64)
+	 N10: 6338
+	 N20: 5712
+	 N30: 4522
+	 N40: 4005
+	 N50: 3263
+	 N60: 2707
+	 N70: 2190
+	 N80: 1864
+	 N90: 1409
+
+# reads with multipe mapping = 0=1/11928(0.01)
+Open sam file (/home/jupyter/test/Pac_fus_sim_75err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_75err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Time consumed to read bam: 0.26s
+Finish _fg_cand[_gene_pair=0
+Potential_fusion: 0 0
+/home/jupyter/test/Pac_fus_sim_80err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/Pac_fus_sim_80err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_80err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.44s
+For all reads: reads=14895/14895(100.00) bases=23615888/35196387(67.10) ins=1515671(4.31) del=1474600(4.19)
+	 N10: 7651
+	 N20: 6104
+	 N30: 4496
+	 N40: 3322
+	 N50: 2762
+	 N60: 2382
+	 N70: 1995
+	 N80: 1638
+	 N90: 1258
+For mapped reads: bases=23615888/35196387(67.10) ins=1515671(4.31) del=1474600(4.19)
+	 N10: 7651
+	 N20: 6104
+	 N30: 4496
+	 N40: 3322
+	 N50: 2762
+	 N60: 2382
+	 N70: 1995
+	 N80: 1638
+	 N90: 1258
+
+# reads with multipe mapping = 0=1/14895(0.01)
+Open sam file (/home/jupyter/test/Pac_fus_sim_80err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_80err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Time consumed to read bam: 0.33s
+Finish _fg_cand[_gene_pair=0
+Potential_fusion: 0 0
+/home/jupyter/test/Pac_fus_sim_85err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/Pac_fus_sim_85err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_85err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.49s
+For all reads: reads=16346/16346(100.00) bases=28855164/35986643(80.18) ins=1324500(3.68) del=1364800(3.79)
+	 N10: 6333
+	 N20: 4736
+	 N30: 3923
+	 N40: 3239
+	 N50: 2819
+	 N60: 2348
+	 N70: 1985
+	 N80: 1512
+	 N90: 1109
+For mapped reads: bases=28855164/35986643(80.18) ins=1324500(3.68) del=1364800(3.79)
+	 N10: 6333
+	 N20: 4736
+	 N30: 3923
+	 N40: 3239
+	 N50: 2819
+	 N60: 2348
+	 N70: 1985
+	 N80: 1512
+	 N90: 1109
+
+# reads with multipe mapping = 5=3/16346(0.02)
+Open sam file (/home/jupyter/test/Pac_fus_sim_85err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_85err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Error!! not equal for 3ba0c644-fcf8-d440-c665-8657a83f8431 5==1
+/home/jupyter/test/Pac_fus_sim_90err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/Pac_fus_sim_90err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_90err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.48s
+For all reads: reads=16956/16956(100.00) bases=32959346/36843857(89.46) ins=1060014(2.88) del=1081561(2.94)
+	 N10: 7151
+	 N20: 5141
+	 N30: 3906
+	 N40: 3212
+	 N50: 2664
+	 N60: 2385
+	 N70: 2004
+	 N80: 1620
+	 N90: 1095
+For mapped reads: bases=32959346/36843857(89.46) ins=1060014(2.88) del=1081561(2.94)
+	 N10: 7151
+	 N20: 5141
+	 N30: 3906
+	 N40: 3212
+	 N50: 2664
+	 N60: 2385
+	 N70: 2004
+	 N80: 1620
+	 N90: 1095
+
+# reads with multipe mapping = 1=2/16956(0.01)
+Open sam file (/home/jupyter/test/Pac_fus_sim_90err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_90err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Error!! not equal for 65ff5adb-a9ff-69d1-4a34-0f1dce7e40c0 2==1
+/home/jupyter/test/Pac_fus_sim_95err_pbmm2.bam /home/jupyter/test/gencode.v38.annotation.gtf 40 50 100
+Open sam file (/home/jupyter/test/Pac_fus_sim_95err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_95err_pbmm2.bam) for scanning multiple-mapped reads. 
+Handle =0 >> multi_map_reads.size=0 read_len_map.size=0 Time-elapsed=0
+Time consumed to read bam: 0.47s
+For all reads: reads=17388/17388(100.00) bases=39502265/41020156(96.30) ins=844086(2.06) del=744386(1.81)
+	 N10: 6010
+	 N20: 4818
+	 N30: 4338
+	 N40: 3519
+	 N50: 3006
+	 N60: 2615
+	 N70: 2205
+	 N80: 1800
+	 N90: 1225
+For mapped reads: bases=39502265/41020156(96.30) ins=844086(2.06) del=744386(1.81)
+	 N10: 6010
+	 N20: 4818
+	 N30: 4338
+	 N40: 3519
+	 N50: 3006
+	 N60: 2615
+	 N70: 2205
+	 N80: 1800
+	 N90: 1225
+
+# reads with multipe mapping = 0=1/17388(0.01)
+Open sam file (/home/jupyter/test/Pac_fus_sim_95err_pbmm2.bam).
+Read sam file (/home/jupyter/test/Pac_fus_sim_95err_pbmm2.bam) for gene fusion detection.
+Handle =0 _fg_cand.size()=0 Time-elapsed=0
+Time consumed to read bam: 0.37s
+Finish _fg_cand[_gene_pair=0
+Potential_fusion: 0 0
