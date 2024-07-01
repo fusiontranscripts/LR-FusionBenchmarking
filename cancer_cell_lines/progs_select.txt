@@ -1,6 +1,5 @@
-ctat-LR-fusion.v0.13.0
+ctat-LR-fusion
 fusionseeker
 JAFFAL
 LongGF
-pbfusion_v0.4.0
-
+pbfusion
