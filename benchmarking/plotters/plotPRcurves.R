@@ -20,7 +20,7 @@ plotPR = function(id, progs, data, colors) {
 	}
 }
 
-data = read.table(argv[1], header=T)
+data = read.table(argv[1], header=T, sep="\t", stringsAsFactors=T)
 progs = levels(data[,1])
 colors = rainbow(length(progs))
 

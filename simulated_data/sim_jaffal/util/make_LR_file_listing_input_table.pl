@@ -38,24 +38,24 @@ while (<STDIN>) {
     my $progname = $pts[-2];
 
 
-    if ($progname eq "JAFFAL") {
-        if ($filename =~ /jaffa_results.csv/) {
-            print join("\t", "JAFFAL", "all", $filename) . "\n";
-        }
-        next;
-    }
+#    if ($progname eq "JAFFAL") {
+#        if ($filename =~ /jaffa_results.csv/) {
+#            print join("\t", "JAFFAL", "all", $filename) . "\n";
+#        }
+#        next;
+#    }
     
-    if ($progname =~ /longgf/i && $dataset !~ /fa_longgf.logs$/) {
-        next;
-    }
+#    if ($progname =~ /longgf/i && $dataset !~ /fa_longgf.logs$/) {
+#        next;
+#    }
     
-    if ($filename =~ /fusionseeker/) {
-        $dataset = join("/", $pts[-2], $pts[-1]);
-        $progname = $pts[-3];
-        if ($filename !~ /confident_genefusion.txt/) {
-            next;
-        }
-    }
+#    if ($filename =~ /fusionseeker/) {
+#        $dataset = join("/", $pts[-2], $pts[-1]);
+#        $progname = $pts[-3];
+#        if ($filename !~ /confident_genefusion.txt/) {
+#            next;
+#        }
+#    }
     
     
     

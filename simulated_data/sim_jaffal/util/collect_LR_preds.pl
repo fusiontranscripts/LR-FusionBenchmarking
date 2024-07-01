@@ -17,13 +17,15 @@ my $fusion_prog_parser_lib_dir = "$FindBin::Bin/../../../benchmarking/FusionProg
 
 my %prog_to_parser = (
     'ctat-LR-fusion' => 'CTAT_LR_parser',
+    
     'flairfusion' => 'FlairFusion_parser',
     'fusionseeker' => 'FusionSeeker_parser',
     'JAFFAL' => 'JAFFAL_parser',
     'LongGF' => 'LongGF_parser',
     'pbfusion_v0.3' => 'PBfusion_parser_v3',
     'pbfusion_v0.2' => 'PBfusion_parser_v3',
-    'pbfusion_v0.4' => 'PBfusion_parser_v4'
+    'pbfusion_v0.4' => 'PBfusion_parser_v4',
+    'pbfusion' => 'PBfusion_parser_v4'
     );
 
 

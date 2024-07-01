@@ -21,7 +21,8 @@ my %prog_to_parser = (
     'JAFFAL' => 'JAFFAL_parser',
     'LongGF' => 'LongGF_parser',
     'pbfusion_v0.3' => 'PBfusion_parser_v3',
-    'pbfusion_v0.4' => 'PBfusion_parser_v4'
+    'pbfusion_v0.4' => 'PBfusion_parser_v4',
+    'pbfusion' => 'PBfusion_parser_v4'
 );
 
 
