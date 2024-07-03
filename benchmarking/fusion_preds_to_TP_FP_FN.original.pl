@@ -114,8 +114,8 @@ main : {
         my $fusion_name = $row->{proxy_fusion_name};
         my $breakpoint = $row->{breakpoint};
         my $num_reads = $row->{num_reads};
-        my $mapped_A_list = $row->{mapped_A_list};
-        my $mapped_B_list = $row->{mapped_B_list};
+        my $mapped_A_list = $row->{mapped_gencode_A_gene_list};
+        my $mapped_B_list = $row->{mapped_gencode_B_gene_list};
 
                 
         # strip sample name from proxy fusion name

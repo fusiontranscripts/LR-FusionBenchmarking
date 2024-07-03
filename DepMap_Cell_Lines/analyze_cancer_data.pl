@@ -66,8 +66,8 @@ unless ($ENV{TRINITY_HOME}) {
 }
 
 
-if (basename(cwd()) ne "cancer_cell_lines") {
-    die "Error, must run this while in the cancer_cell_lines/ directory.";
+if (basename(cwd()) ne "DepMap_Cell_Lines") {
+    die "Error, must run this while in the DepMap_Cell_Lines/ directory.";
 }
 
 
