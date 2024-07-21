@@ -16,10 +16,11 @@ Removing messy fusions defined as:
 
 
 
-my $usage = "usage: $0 fusion_preds.tsv progs_select.txt\n\n";
+my $usage = "usage: $0 fusion_preds.tsv progs_select.txt MIN_READS_FOR_MESSY\n\n";
 
 my $fusion_preds_file = $ARGV[0] or die $usage;
 my $progs_select_file = $ARGV[1] or die $usage;
+my $MIN_READS_FOR_MESSY = $ARGV[2] or die $usage;
 
 my %progs_select;
 open(my $fh, $progs_select_file) or die $!;
@@ -47,6 +48,11 @@ while(my $row = $delim_parser->get_row()) {
         
     my $prog = $row->{prog};
     my $sample = $row->{sample};
+
+    my $num_reads = $row->{num_reads};
+    if ($num_reads < $MIN_READS_FOR_MESSY) {
+        next;
+    }
     
     if ($progs_select{$prog}) {
         # include in scoring

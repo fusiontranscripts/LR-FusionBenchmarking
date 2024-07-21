@@ -12,6 +12,10 @@ use Process_cmd;
 use Getopt::Long qw(:config posix_default no_ignore_case bundling pass_through);
 
 
+
+my $MIN_READ_SUPPORT = 3;
+
+
 my $usage = <<__EOUSAGE__;
 
 
@@ -35,6 +39,8 @@ __EOUSAGE__
 my $help_flag;
 my $restricted_progs_file = "";
 my $extra_true_preds_file;
+
+
 
 
 &GetOptions ( 'h' => \$help_flag,
@@ -103,11 +109,11 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "annotate_fusions.ok"));
 
     # filter HLA and mitochondrial features, and require min read support
-    $cmd = "$benchmark_toolkit_basedir/filter_collected_preds.pl preds.collected.gencode_mapped.wAnnot 3 > preds.collected.gencode_mapped.wAnnot.filt";
+    $cmd = "$benchmark_toolkit_basedir/filter_collected_preds.pl preds.collected.gencode_mapped.wAnnot $MIN_READ_SUPPORT > preds.collected.gencode_mapped.wAnnot.filt";
     $pipeliner->add_commands(new Command($cmd, "filter_fusion_annot.ok"));
-
+    
     # filter out messy fusions (those containing genes predicted in fusions by multiple programs across multple samples
-    $cmd = "$benchmark_toolkit_basedir/exclude_messy_fusions.pl  preds.collected.gencode_mapped.wAnnot.filt progs_select.txt ";
+    $cmd = "$benchmark_toolkit_basedir/exclude_messy_fusions.pl  preds.collected.gencode_mapped.wAnnot.filt progs_select.txt 3 ";
     $pipeliner->add_commands(new Command($cmd, "filter_messy.ok"));
     
         
