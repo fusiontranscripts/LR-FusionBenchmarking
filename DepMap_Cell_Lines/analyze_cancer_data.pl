@@ -28,6 +28,8 @@ my $usage = <<__EOUSAGE__;
 #
 #  --extra_true <string>         file containing the additional true entries to include
 #
+#  --min_read_support <int>      minimum read support (default: $MIN_READ_SUPPORT)
+#
 #####################
 
 
@@ -46,6 +48,7 @@ my $extra_true_preds_file;
 &GetOptions ( 'h' => \$help_flag,
               'restricted_progs=s' => \$restricted_progs_file,
               'extra_true=s' => \$extra_true_preds_file,
+              'min_read_support=i' => \$MIN_READ_SUPPORT              
     );
 
 
@@ -127,7 +130,7 @@ main: {
     
     ## run Venn-based accuracy analysis:
 
-    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl --preds_file preds.collected.gencode_mapped.wAnnot.filt.pass --progs_select progs_select.txt --low 2 --hi 3 ";
+    $cmd = "$benchmark_toolkit_basedir/Venn_analysis_strategy.pl --preds_file preds.collected.gencode_mapped.wAnnot.filt.pass --progs_select progs_select.txt --low 2 --hi 4 ";
     if ($extra_true_preds_file) {
         $cmd .= " --extra_true $extra_true_preds_file";
     }

@@ -2,8 +2,11 @@ just_LR_preds_no_Illumina:
 	./analyze_cancer_data.pl
 
 
-incl_extra_starF_supported_in_truth_by_Illum:
-	./analyze_cancer_data.pl --extra_true $(PWD)/Illumina_supported_fusions.tsv
+illum_TP_uniq_FP:
+	./analyze_Illum_as_TP_unique_as_FP.pl either
+	./analyze_Illum_as_TP_unique_as_FP.pl arriba,starF
+	./analyze_Illum_as_TP_unique_as_FP.pl arriba
+	./analyze_Illum_as_TP_unique_as_FP.pl starF
 
 
 clean:
