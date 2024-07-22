@@ -1,5 +1,5 @@
 just_LR_preds_no_Illumina:
-	./analyze_cancer_data.pl
+	./analyze_cancer_data.pl  --min_read_support 3 # run with different values to explore different truth sets accordingly.
 
 
 illum_TP_uniq_FP:
