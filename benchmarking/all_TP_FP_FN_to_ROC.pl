@@ -41,7 +41,7 @@ sub make_ROC {
     
     my @uniq_vals = sort {$a<=>$b} &get_unique(@TP_fusions, @FP_fusions);
     
-    for (my $i = 0; $i < $#uniq_vals; $i++) {
+    for (my $i = 0; $i <= $#uniq_vals; $i++) {
 
         my $min_val = $uniq_vals[$i];
         
