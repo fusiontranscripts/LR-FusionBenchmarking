@@ -6,6 +6,10 @@ import argparse
 
 # contributed by Bo Li, mod by bhaas
 
+# based on: Davis JaG M. The relationship between precision-recall and ROC curves. In: Proceedings of the 23rd International Conference on Machine Learning; 2006.
+# https://dl.acm.org/doi/10.1145/1143844.1143874
+# pdf: https://scholar.google.com/scholar_url?url=https://dl.acm.org/doi/pdf/10.1145/1143844.1143874%3Fcasa_token%3DpI3ADwSLJ7IAAAAA:JiJtLel0wyk5TG1jZylYlXUvv00jNNT7Ka-6LLWm-4InTPyQj477xKBKetfCx5p5TqDkNXsYA1A&hl=en&sa=T&oi=ucasa&ct=ucasa&ei=s76fZpL1Dt2v6rQP6qW4gQY&scisig=AFWwaebC_t16FDtVfAZLSRuhDfFw
+
 ntruth = 0
 
 
