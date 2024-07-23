@@ -1,0 +1,1 @@
+ ~/GITHUB/CTAT_FUSIONS/FusionSimulatorToolkit/FusionTranscriptSimulator.specifed_gene_pairs.pl ref_annot.gff3 ref_genome.fa gene_fam_gene_pairs.tsv.gene_ids  > sim_fusions.fasta
