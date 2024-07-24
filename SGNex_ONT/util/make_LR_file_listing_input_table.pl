@@ -37,9 +37,7 @@ while (<STDIN>) {
     my $dataset = $pts[-1];
     my $progname = $pts[-2];
 
-    $dataset =~ s/DepMap_v2_//;
-    $dataset =~ s/DepMap_v1v2mrgd_//;
-    $dataset =~ s/[\._]\S+$//;
+    $dataset =~ s/_run1_.*$//;
     
     
     if (%restrict_progs && ! exists $restrict_progs{$progname}) {
