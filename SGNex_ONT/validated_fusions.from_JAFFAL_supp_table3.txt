@@ -57,8 +57,5 @@ K562|fusion
 K562|fusion
 K562|fusion
 K562|fusion
-HCT-116|fusion
-HCT-116|fusion
-HCT-116|fusion
 A549|fusion
 A549|fusion
