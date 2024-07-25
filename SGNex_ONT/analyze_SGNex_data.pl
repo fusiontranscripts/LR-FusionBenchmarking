@@ -39,7 +39,7 @@ my $fusion_annotator_basedir = $ENV{FUSION_ANNOTATOR};
 my $trinity_home = $ENV{TRINITY_HOME};
 
 
-my $ILLUM_SUPPORTED_TRUTH_SET = &ensure_full_path("Illumina_supported_fusions.tsv");
+my $VALIDATED_FUSIONS_FILENAME = "validated_fusions.from_JAFFAL_supp_table3.txt";
 
 main: {
 
@@ -71,12 +71,19 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "filter_fusion_annot.ok"));
  
     # capture counts of progs agree: (also writes $preds_file.proxy_assignments ) with proxy fusion selected.
-    $cmd = "$benchmark_toolkit_basedir/collected_preds_to_fusion_prog_support_listing.pl  preds.collected.gencode_mapped.wAnnot.filt  progs_select.txt > preds.collected.gencode_mapped.wAnnot.filt.proxy_assignments.byProgAgree";
+    $cmd = "./util/SGNex_collected_preds_to_fusion_prog_support_listing.pl  preds.collected.gencode_mapped.wAnnot.filt  progs_select.txt $VALIDATED_FUSIONS_FILENAME  > preds.collected.gencode_mapped.wAnnot.filt.proxy_assignments.byProgAgree";
     $pipeliner->add_commands(new Command($cmd, "byProgAgree.ok"));
     
     $pipeliner->run();
+    
 
-    exit(1);
+    exit(0);
+    
+=ladeda1
+    
+    ########################
+    ## Evaluate predictions
+    ########################
     
     
     my $input_file = "preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments";
@@ -84,164 +91,177 @@ main: {
 
     my $prog_agree_listing = "preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments.byProgAgree";
     $prog_agree_listing = &ensure_full_path($prog_agree_listing);
+
+
+    my ($sample_to_fusion_preds_href, $fusion_preds_column_headers_aref) = parse_fusion_preds($input_file);
+
+    my ($sample_to_unique_fusion_preds_href, $unique_fusions_column_headers_aref) = parse_unique_fusion_preds($prog_agree_listing);
+    
+
+    # get list of the individual samples here
+    my @samples;
+    {
+
+        my %s;
         
+        open(my $fh, "fusion_result_file_listing.dat") or die $!;
+        while(<$fh>) {
+            chomp;
+            my @x = split(/\t/);
+            my $sample_name = $x[1];
+            $s{$sample_name} = 1;
+        }
+        @samples = keys %s;
+    }
+    
+    
+    
+    
+    #########################################
+    ## examine each of the samples separately
+
+    my %TRUTH_FUSIONS;
+    {
+        open(my $fh, $VALIDATED_FUSIONS_FILENAME) or die $!;
+        while(<$fh>) {
+            chomp;
+            my $sample_fusion_name = $_;
+            my ($sample, $fusion_name) = split(/\|/, $sample_fusion_name);
+            push (@{$TRUTH_FUSIONS{$sample}}, $fusion_name);
+        }
+        close $fh;
+    }
+
+    
+    
+
     my $base_workdir = cwd();
 
-    my $analysis_token = "something";
+
     
-    my $workdir = "__" . "$analysis_token";
+    foreach my $sample (@samples) {
 
-    unless (-d $workdir) {
-        mkdir ($workdir) or die "Error, cannot mkdir $workdir";
-    }
-    chdir ($workdir) or die "Error, cannot cd to $workdir";
-
-    # creates two files:
-    my $truth_set_fname = &ensure_full_path(basename($prog_agree_listing) . ".illum_agree.truth_set");
-    my $unsure_set_fname = &ensure_full_path(basename($prog_agree_listing) . ".nonunique.unsure_set");
-
-    {
-        my %illum_truth_fusions;
-        {
-            open(my $fh, $ILLUM_SUPPORTED_TRUTH_SET) or die $!;
-            my $reader = new DelimParser::Reader($fh, "\t");
-            while(my $row = $reader->get_row()) {
-                my $proxy_fusion = $row->{proxy_fusion_name} or die "Error, no proxy fusion name";
-                $illum_truth_fusions{$proxy_fusion} = 1;
-            }
-        }
+        my $core_sample_name = (split(/_/, $sample))[1];
         
-        open(my $fh, $prog_agree_listing) or die $!;
-        my $reader = new DelimParser::Reader($fh, "\t");
-        my @column_headers = $reader->get_column_headers();
-
-        open(my $truth_ofh, ">$truth_set_fname") or die $!;
-        open(my $unsure_ofh, ">$unsure_set_fname") or die $!;
-        my $truth_writer = new DelimParser::Writer($truth_ofh, "\t", \@column_headers);
-        my $unsure_writer = new DelimParser::Writer($unsure_ofh, "\t", \@column_headers);
-
-        while(my $row = $reader->get_row()) {
-            my $proxy_fusion_name = $row->{proxy_fusion_name} or die "Error, no proxy fusion name specified";
-            my $num_progs = $row->{num_progs} or die "Error, num progs not specified";
-            if ($illum_truth_fusions{$proxy_fusion_name}) {
-                $truth_writer->write_row($row);
-            }
-            elsif ($num_progs > 1) {
-                $unsure_writer->write_row($row);
-            }
-        }
-    }
+        my $truth_fusions_aref = $TRUTH_FUSIONS{$core_sample_name} or die "Error, no truth fusions defined for sample $sample , $core_sample_name";
         
+        chdir $base_workdir or die $!;
 
-    $pipeliner = &init_pipeliner();
-    
+        my $fusion_preds_aref = $sample_to_fusion_preds_href->{sample};
         
-
-    ## Examine accuracy by applying unsure and paralog-equiv options
-
-    foreach my $settings_href ( #{ allow_paralogs => 0, unsure_fusions => undef },
-                                #{ allow_paralogs => 1, unsure_fusions => undef },
-                                { allow_paralogs => 0, unsure_fusions => $unsure_set_fname },
-                                { allow_paralogs => 1, unsure_fusions => $unsure_set_fname } ) {
-
-        &evaluate_predictions($input_file, $truth_set_fname, $settings_href);
+        &example_sample($sample, $truth_fusions_aref, $fusion_preds_aref, $fusion_preds_column_headers_aref);
 
     }
 
+=cut
 
-    print STDERR "Done.\n";
     exit(0);
     
 }
 
+=ladeda2
+
 ####
-sub evaluate_predictions {
-    my ($input_file, $min_agree_truth_set, $analysis_settings_href) = @_;
-
-    my $output_filename = "eval_illum_supported";
-    my $checkpoint_token = "eval_illum_supported";
-    {
-        my @analysis_token_pts;
-        if ($analysis_settings_href->{allow_paralogs}) {
-            push (@analysis_token_pts, "okPara");
-        }
-        if ($analysis_settings_href->{unsure_fusions}) {
-            push (@analysis_token_pts, "ignoreUnsure");
-        }
-        if (@analysis_token_pts) {
-            my $analysis_token = join("_", @analysis_token_pts);
-            $output_filename .= ".$analysis_token";
-            $checkpoint_token .= ".$analysis_token";
-        }
+sub examine_sample {
+    my ($sample, $truth_fusions_aref, $fusion_preds_aref, $fusion_pred_column_headers_aref, $unique_fusion_preds_aref) = @_;
+    
+    my $analysis_token = "eval-$sample";
+    my $workdir = "__" . "$analysis_token";
+    
+    unless (-d $workdir) {
+        mkdir ($workdir) or die "Error, cannot mkdir $workdir";
     }
-    $output_filename .= ".results";
+    chdir ($workdir) or die "Error, cannot cd to $workdir";
     
-    ## run analysis pipeline
-    my $pipeliner = &init_pipeliner();
+    # creates two files:
+    my $truth_set_fname = &ensure_full_path(basename($prog_agree_listing) . "validated.truth_set");
+    my $unsure_set_fname = &ensure_full_path(basename($prog_agree_listing) . ".nonunique.unsure_set");
 
-    ##################
-    # score TP, FP, FN
-    
-    my $cmd = "$benchmark_toolkit_basedir/fusion_preds_to_TP_FP_FN.original.pl --truth_fusions $min_agree_truth_set --fusion_preds $input_file";
 
-    $cmd .= " --allow_reverse_fusion "; # always do this here. Sim data shows it's important for some progs.
+    my $sample_TP_fusions_file = "TP.fusions.list";
+    my $fusion_preds_file = "fusion_preds.txt";
+
+    my $prep_inputs_checkpoint = "_prep.ok";
     
-    if ($analysis_settings_href->{allow_paralogs}) {
-        $cmd .= " --allow_paralogs $benchmark_data_basedir/resources/paralog_clusters.dat ";
+
+    if (! -e $prep_inputs_checkpoint) {
+        {
+            my @TP_fusions = @$truth_fusions_aref;
+            
+            open (my $ofh, ">$truth_set_fname") or die "Error, cannot write to $truth_set_fname";
+            print $ofh "fusion_name\tnum_reads\n";
+            foreach my $fusion (@TP_fusions) {
+                print $ofh join("\t", $fusion, "1") . "\n";
+            }
+            close $ofh;
+        }
+        
+        {
+            open (my $ofh, ">$fusion_preds_file") or die "Error, cannot write to $fusion_preds_file";
+            my $delim_writer = new DelimParser::Writer($ofh, "\t", $column_headers_aref);
+            
+            foreach my $prog (keys %$fusion_prog_to_preds_href) {
+                my @rows = @{$fusion_prog_to_preds_href->{$prog}};
+                foreach my $row (@rows) {
+                    $delim_writer->write_row($row);
+                }
+            }
+            close $ofh;
+        }
+    
+        &process_cmd("touch $prep_inputs_checkpoint");
     }
-    
-    if ($analysis_settings_href->{unsure_fusions}) {
-        $cmd .= " --unsure_fusions " . $analysis_settings_href->{unsure_fusions};
-    }
-
-    $cmd .= " > $output_filename.scored";
-
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.tp_fp_fn.ok"));
-
-    ##############
-    # generate ROC
-    
-    $cmd = "$benchmark_toolkit_basedir/all_TP_FP_FN_to_ROC.pl $output_filename.scored > $output_filename.scored.ROC"; 
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.roc.ok"));
-    
-    # plot ROC
-    $cmd = "$benchmark_toolkit_basedir/plotters/plot_ROC.Rscript $output_filename.scored.ROC";
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.plot_roc.ok"));
-
-
-    # plot F1
-    $cmd = "$benchmark_toolkit_basedir/plotters/plot_F1_vs_min_frags.R $output_filename.scored.ROC";
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.plot_F1_vs_min_frags.ok"));
-
-    $cmd = "$benchmark_toolkit_basedir/plotters/plot_peak_F1_scatter.R $output_filename.scored.ROC";
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.plot_peak_F1_scatter.ok"));
-    
-    # plot TP vs FP counts according to min frags per prog
-    $cmd = "$benchmark_toolkit_basedir/plotters/plot_TP_FP_vs_minSum_per_prog.R $output_filename.scored.ROC";
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.plot_TP_FP_vs_minFrags.ok"));
-    
-                
-    ###################################
-    # convert to Precision-Recall curve
-    
-    $cmd = "$benchmark_toolkit_basedir/calc_PR.py --in_ROC $output_filename.scored.ROC --out_PR $output_filename.scored.PR | sort -k2,2gr | tee $output_filename.scored.PR.AUC";
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.pr.ok"));
-    
-    # # plot PR curve
-    $cmd = "$benchmark_toolkit_basedir/plotters/plotPRcurves.R $output_filename.scored.PR $output_filename.scored.PR.plot.pdf";
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.plot_pr.ok"));
-    
-    # plot AUC barplot
-    $cmd = "$benchmark_toolkit_basedir/plotters/AUC_barplot.Rscript $output_filename.scored.PR.AUC";
-    $pipeliner->add_commands(new Command($cmd, "$checkpoint_token.plot_pr_auc_barplot.ok"));
-    
-    $pipeliner->run();
-
-    return;
     
 }
 
+####
+sub parse_unique_fusion_preds {
+    my ($prog_agree_listing) = @_;
 
+    my %sample_to_unique_fusion_preds;
+    
+    open(my $fh, $prog_agree_listing) or die $!;
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
+    my @column_headers = $delim_parser->get_column_headers();
+
+    while(my $row = $delim_parser->get_row()) {
+        my $sample_fusion_name = $row->{proxy_fusion_name};
+        my $sample_name = split(/\|/, $sample_fusion_name)[0];
+        my $num_progs = $row->{num_progs};
+        if ($num_progs == 1) {
+            push (@{$sample_to_preds{$sample_name}}, $row);
+        }
+    }
+
+    return(\%sample_to_preds, \@column_headers);
+}
+
+    
+
+####
+sub parse_fusion_preds {
+    my ($preds_file) = @_;
+
+    open(my $fh, $preds_file) or die "Error, cannot open file: $preds_file";
+    
+    my $delim_parser = new DelimParser::Reader($fh, "\t");
+
+    my @column_headers = $delim_parser->get_column_headers();
+
+    my %sample_to_preds;
+    
+    while(my $row = $delim_parser->get_row()) {
+        
+        my $sample_name = $row->{sample};
+        my $prog = $row->{prog};
+        push (@{$sample_to_preds{$sample_name}->{$prog}}, $row);
+    }
+
+    return(\%sample_to_preds, \@column_headers);
+}
+
+=cut
+        
 ####
 sub init_pipeliner {
     

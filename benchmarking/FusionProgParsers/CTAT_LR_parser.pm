@@ -74,6 +74,14 @@ sub parse_fusion_result_file {
             next; 
         } # no self-fusions
 
+        if (0) {
+            # just for testing w/ ONT data
+            my $splice_type = $row->{SpliceType};
+            if ($splice_type =~ /INCL/) {
+                next;
+            }
+        }
+        
         my $chr_coords_A = $row->{LeftBreakpoint};
         my $chr_coords_B = $row->{RightBreakpoint};
         

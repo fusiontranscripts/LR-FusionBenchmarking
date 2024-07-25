@@ -37,7 +37,14 @@ while (<STDIN>) {
     my $dataset = $pts[-1];
     my $progname = $pts[-2];
 
-    $dataset =~ s/_run1_.*$//;
+    if ($dataset =~ /^(.*_replicate\d_run\d)/) {
+        $dataset = $1;
+    }
+    else {
+        confess "cannot parse sample name from $dataset";
+    }
+    
+    $dataset =~ s/-EV_directRNA/_EVdirectRNA/;
     
     
     if (%restrict_progs && ! exists $restrict_progs{$progname}) {
