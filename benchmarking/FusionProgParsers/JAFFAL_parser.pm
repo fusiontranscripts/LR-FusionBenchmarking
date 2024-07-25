@@ -85,7 +85,11 @@ sub parse_fusion_result_file {
 
         ## get sample encoding
         my $dataset = $row->{sample};
+
         
+        #my $confidence = $row->{classification};
+        #unless ($confidence eq "HighConfidence") { next; }
+                
         
         if ($dataset =~ /Pac|ONT/ && $dataset =~ /\d+err/) {
             ## jaffal sim data customization here.
