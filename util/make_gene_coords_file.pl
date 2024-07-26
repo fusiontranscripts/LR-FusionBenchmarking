@@ -3,6 +3,11 @@
 use strict;
 use warnings;
 
+
+my $usage = "usage: $0 ref_annot_gtf.gene_spans\n\n";
+
+my $gene_spans_file = $ARGV[0] or die $usage;
+
 =gene_spans_file_format
 ENSG00000225538.1       chr11   56082801        56083739        +       OR5BE1P unprocessed_pseudogene
 ENSG00000237851.1       chr6    142788123       142794086       +       RP1-67K17.4     lincRNA
@@ -15,7 +20,7 @@ ENSG00000225193.5       chr15   90206572        90206967        +       RPS12P26
 
 
 my %gene_symbol_counter;
-open(my $fh, "/seq/RNASEQ/__ctat_genome_lib_building/Mar2021/GRCh38_gencode_v22_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir/ref_annot.gtf.gene_spans") or die $!;
+open(my $fh, $gene_spans_file) or die $!;
 
 # first count gene symbols:
 
@@ -25,7 +30,8 @@ while(<$fh>) {
     $gene_symbol_counter{$gene_symbol}++;
 }
 
-open($fh, "/seq/RNASEQ/__ctat_genome_lib_building/Mar2021/GRCh38_gencode_v22_CTAT_lib_Mar012021.plug-n-play/ctat_genome_lib_build_dir/ref_annot.gtf.gene_spans") or die $!;
+open($fh, $gene_spans_file) or die $!;
+print join("\t", "gene_id",	"chr",	"lend",	"rend",	"file",	"primary_target") . "\n";
 while(<$fh>) {
     chomp;
     my ($ensg_id, $chrom, $lend, $rend, $orient, $gene_symbol, $gene_type) = split(/\t/);
