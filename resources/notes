@@ -1,15 +1,8 @@
 
-## hg19 coordinate liftovers and gene symbol aliases:
-
-using: /home/unix/bhaas/FUS/util/make_hg19_gene_coords_file.pl  to extract liftover coords.
-
-ie.
-
-    liftOver -gff ref_annot.gtf  /home/unix/bhaas/utilities/hg38ToHg19.over.chain.gz mapped unmapped
-    ~/GITHUB/CTAT_FUSIONS/ctat-genome-lib-builder/util/gtf_to_gene_spans.pl mapped > mapped.coords
-
-    then aggregate all coords across all hg19-transposed annotations to gene.coords.gz file.
-
+# gene.coords.gz file
+- used ../util/make_gene_coords_file.pl  with hg38 gene spans
+- supplemented with hg19 gencode v19 liftover (see subdir)
+ 
 
 ## paralog clustering
 

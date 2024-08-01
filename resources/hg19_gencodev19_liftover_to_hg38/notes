@@ -1,0 +1,4 @@
+# used https://genome.ucsc.edu/cgi-bin/hgLiftOver to liftover hg19 to hg38
+
+    ./make_hg38_v19_gene_spans.py  > hg19_gene_coords_liftover.coords
+    
