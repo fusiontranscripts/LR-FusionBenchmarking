@@ -19,7 +19,7 @@ data = bind_rows(strict_results,
 write.table(data, "all_combined_results.PR_AUC.tsv", sep="\t", row.names=F, quote=F)
 
 
-mean_AUC_data = data %>% group_by(analysisType, prog, rep_num, coverage_level, pass_count, sample_count) %>%
+mean_AUC_data = data %>% group_by(analysisType, prog, rep_num, coverage_level, pass_count) %>%
         summarize(mean_AUC = mean(AUC))
 
 
@@ -38,6 +38,8 @@ mean_AUC_data$prog = factor(mean_AUC_data$prog, levels=ranked_progs$prog)
 mean_AUC_data$analysisType = factor(mean_AUC_data$analysisType, levels=c('strict', 'allow_reverse', 'allow_revNparalogs'))
 
 
+mean_AUC_data = mean_AUC_data %>% arrange(analysisType, coverage_level, pass_count, desc(mean_AUC))
+    
 write.table(mean_AUC_data, "mean_PR_AUC_summary.tsv", sep="\t", row.names=F, quote=F)
 
 

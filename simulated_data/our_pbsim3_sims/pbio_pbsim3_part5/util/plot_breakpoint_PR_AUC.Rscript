@@ -1,0 +1,55 @@
+#!/usr/bin/env Rscript
+
+library(tidyverse)
+
+
+# exact brkpt
+exact_brkpt_data = read.table("__breakpoint_exact/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
+
+exact_brkpt_data$coverage_level = factor(exact_brkpt_data$coverage_level, levels=c('cov5', 'cov50'))
+
+exact_brkpt_data$pass_count = factor(exact_brkpt_data$pass_count, levels=c('pass1', 'pass2', 'pass3', 'pass4', 'pass5', 'pass10', 'pass20'))
+
+exact_brkpt_data_mean_AUC = exact_brkpt_data %>%  group_by(prog, rep_num, pass_count, coverage_level) %>%
+	summarize(mean_AUC = mean(AUC))
+
+
+
+# inexact brkpt
+win10_brkpt_data = read.table("__breakpoint_win10/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
+
+win10_brkpt_data$coverage_level = factor(win10_brkpt_data$coverage_level, levels=c('cov5', 'cov50'))
+
+win10_brkpt_data$pass_count = factor(win10_brkpt_data$pass_count, levels=c('pass1', 'pass2', 'pass3', 'pass4', 'pass5', 'pass10', 'pass20'))
+
+win10_brkpt_data_mean_AUC = win10_brkpt_data %>%  group_by(prog, rep_num, pass_count, coverage_level) %>%
+    summarize(mean_AUC = mean(AUC)) 
+
+
+
+# combine results
+
+combined_results = bind_rows(exact_brkpt_data  %>% mutate(analysisType = "Exact Brkpt"),
+                             win10_brkpt_data %>% mutate(analysisType = "Fuzzy Brkpt") )
+
+
+write.table(combined_results, "breakpoint_all_PR_AUC_results.tsv", quote=F, sep="\t", row.names=F)
+
+
+combined_results_mean_AUC = bind_rows(exact_brkpt_data_mean_AUC %>% mutate(analysisType = "Exact Brkpt"),
+                             win10_brkpt_data_mean_AUC %>% mutate(analysisType = "Fuzzy Brkpt"))
+
+
+write.table(combined_results_mean_AUC, file='breakpoint_all_mean_PR_AUC_data.tsv', quote=F, sep="\t", row.names=F)
+
+
+brkpt_accuracy_plot = combined_results_mean_AUC %>% ggplot() +
+        geom_point(aes(x=pass_count, y=mean_AUC, color=prog)) +
+        geom_line(aes(x=pass_count, y=mean_AUC, group=prog, color=prog)) +
+        facet_grid(vars(analysisType), vars(coverage_level)) +
+        ggtitle("Exact or Fuzzy Breakpoint Detection Accuracy") +
+        ylim(0,1)
+
+
+ggsave(brkpt_accuracy_plot, filename="breakpoint_mean_PR_AUC_summary.pdf", width=8, height=6)
+
