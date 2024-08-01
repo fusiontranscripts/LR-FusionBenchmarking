@@ -90,6 +90,14 @@ main: {
                     'analyze_strict', 
                     { allow_reverse_fusion => 0, allow_paralogs => 0 },
                     $column_headers_aref);
+
+
+    # score strict ordering but allow paralog proxies
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
+                    'analyze_strict_and_paralogs', 
+                    { allow_reverse_fusion => 0, allow_paralogs => 1 },
+                    $column_headers_aref);
     
     # score allow reverse fusion
     &score_and_plot($sample_to_fusion_preds_href, 
@@ -143,6 +151,11 @@ main: {
     $cmd = "./util/plot_jaffal_breakpoint_accuracy.Rscript";
     $pipeliner->add_commands(new Command($cmd, "breakpoint_maxF1_summary_plots.ok"));
 
+    # summarize PR AUC vs. divergence
+    $cmd = "./util/plot_jaffal_PR_AUC_vs_divergence.Rscript";
+    $pipeliner->add_commands(new Command($cmd, "plot_jaffal_PR_AUC_vs_divergence.ok"));
+    
+    
     $pipeliner->run();
     
     
