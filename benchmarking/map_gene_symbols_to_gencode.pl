@@ -28,7 +28,7 @@ my %CHR_COORDS_TO_GENE_STRUCTS;  # key on chr:lend-rend, return list of structs.
 
 our %CHR_TO_ITREE;
 
-my $EXCLUDE_LIST = "^(Y_RNA|snoU13)"; ## make regex, include | separated entries
+my $EXCLUDE_LIST = "^(Y_RNA|snoU13|N/A)"; ## make regex, include | separated entries
 
 my $MAX_GENE_ALIASES = 1000; ## should be generous enough, warding against weirdnesses
 my $MAX_GENE_RANGE_SEARCH = 2e6;
@@ -62,27 +62,48 @@ main: {
 
 
     my $delim_writer = new DelimParser::Writer(*STDOUT, "\t", [@column_headers, "mapped_gencode_A_gene_list", "mapped_gencode_B_gene_list"]);
-        
+
+    my %counts_of_excluded_entries;
+    
     while (my $row = $delim_parser->get_row()) {
                 
         my $fusion_name = $row->{fusion};
-        
+                
         my ($geneA, $geneB) = split(/--/, $fusion_name);
 
+        
+        if ($geneA =~ /$EXCLUDE_LIST/ || $geneB =~ /$EXCLUDE_LIST/) {
+            # print STDERR "-excluding: " . join("\t", $row->{sample}, $row->{prog}, $fusion_name) . "\n";
+
+            $counts_of_excluded_entries{ $row->{prog} } ++;
+            
+            next;
+        }
+        
         #print STDERR "\t** fusion: [$fusion]  \n";
         my $gencode_A_genes = &get_gencode_overlapping_genes($geneA);
         
         my $gencode_B_genes = &get_gencode_overlapping_genes($geneB);
+
+        if ($gencode_A_genes eq "." || $gencode_B_genes eq ".") {
+            #print STDERR "-skipping prediction due to excluding gene symbol pair: " . join("\t", $row->{sample}, $row->{prog}, $fusion_name) . "\n";
+            $counts_of_excluded_entries{ $row->{prog} } ++;
+            next;
+        }
+        
         
         $row->{mapped_gencode_A_gene_list} = $gencode_A_genes;
-
         $row->{mapped_gencode_B_gene_list} = $gencode_B_genes;
         
         $delim_writer->write_row($row);
                 
     }
     close $fh;    
-    
+
+
+    print STDERR "Counts of excluded entries by prog: " . Dumper(\%counts_of_excluded_entries);
+
+    print STDERR "-done gencode symbol mappings.\n";
     
     exit(0);
 }
@@ -189,7 +210,7 @@ sub __map_genes {
 
     unless (ref $gene_structs_aref) {
         unless ($reported_missing_gene{$gene_id}) {
-            print STDERR "-warning, no gene stored for identifier: [$gene_id]\n";
+            print STDERR "-warning, no gene stored for identifier: [$gene_id] - fusions including this symbol will be ignored\n";
             $reported_missing_gene{$gene_id} = 1;
         }
         return ();

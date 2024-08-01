@@ -1,0 +1,63 @@
+#!/usr/bin/env Rscript
+
+library(tidyverse)
+
+strict_results = read.table("__analyze_strict/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
+strict_results$analysisType="strict"
+
+allow_reverse_results = read.table("__analyze_allow_reverse/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
+allow_reverse_results$analysisType="allow_reverse"
+
+allow_revNparalogs_results = read.table("__analyze_allow_rev_and_paralogs/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
+allow_revNparalogs_results$analysisType="allow_revNparalogs"
+
+data = bind_rows(strict_results,
+                 allow_reverse_results,
+                 allow_revNparalogs_results)
+
+
+write.table(data, "all_combined_results.PR_AUC.tsv", sep="\t", row.names=F, quote=F)
+
+
+mean_AUC_data = data %>% group_by(analysisType, prog, rep_num, coverage_level, pass_count, sample_count) %>%
+        summarize(mean_AUC = mean(AUC))
+
+
+mean_AUC_data$coverage_level = factor(mean_AUC_data$coverage_level, levels=c('cov5', 'cov50'))
+
+
+mean_AUC_data$pass_count = factor(mean_AUC_data$pass_count, levels=c('pass1', 'pass2', 'pass3', 'pass4', 'pass5', 'pass10', 'pass20'))
+
+
+# rank programs 
+
+ranked_progs = mean_AUC_data  %>% group_by(prog) %>% summarize(mean_mean_AUC = mean(mean_AUC)) %>% arrange(mean_mean_AUC)
+
+mean_AUC_data$prog = factor(mean_AUC_data$prog, levels=ranked_progs$prog)
+
+mean_AUC_data$analysisType = factor(mean_AUC_data$analysisType, levels=c('strict', 'allow_reverse', 'allow_revNparalogs'))
+
+
+write.table(mean_AUC_data, "mean_PR_AUC_summary.tsv", sep="\t", row.names=F, quote=F)
+
+
+# barplot
+
+p_barplot = mean_AUC_data %>% ggplot(aes(x=factor(pass_count), y=mean_AUC)) +
+        geom_bar(stat='identity', position='dodge', aes(fill=prog)) +
+        facet_grid(vars(analysisType), vars(coverage_level))
+
+ggsave(p_barplot, filename="mean_PR_AUC_summary.barplot.pdf", width=8, height=10)
+
+
+p_linepoint = mean_AUC_data %>%
+        #filter(analysisType %in% c('strict', 'allow_reverse')) %>%
+        mutate(pass_count = as.numeric(str_replace(pass_count, "pass", ""))) %>%
+        ggplot() +
+        geom_point(aes(x=pass_count, y=mean_AUC, color=prog)) +
+        geom_line(aes(x=pass_count, y=mean_AUC, group=prog, color=prog)) +
+        facet_grid(vars(analysisType), vars(coverage_level))
+
+ggsave(p_linepoint, filename="mean_PR_AUC_summary.linepoint.pdf", width=8, height=7)
+
+
