@@ -5,6 +5,9 @@ library(tidyverse)
 strict_results = read.table("__analyze_strict/combined_results.ROC.tsv", header=T, sep="\t", stringsAsFactors = F)
 strict_results$analysisType="strict"
 
+strict_allow_paralog_results = read.table("__analyze_strict_and_paralogs/combined_results.ROC.tsv", header=T, sep="\t", stringsAsFactors = F)
+strict_allow_paralog_results$analysisType="strict_allow_paralogs"
+    
 allow_reverse_results = read.table("__analyze_allow_reverse/combined_results.ROC.tsv", header=T, sep="\t", stringsAsFactors = F)
 allow_reverse_results$analysisType="allow_reverse"
 
@@ -12,16 +15,16 @@ allow_revNparalogs_results = read.table("__analyze_allow_rev_and_paralogs/combin
 allow_revNparalogs_results$analysisType="allow_revNparalogs"
 
 data = bind_rows(strict_results,
+                 strict_allow_paralog_results,
                  allow_reverse_results,
                  allow_revNparalogs_results)
 
 
-
+write.table(data, "ROC_summary.tsv", sep="\t", quote=F, row.names=F) 
 
 
 max_F1_data = data %>% group_by(analysisType, prog, seqtype, divergence) %>% 
     arrange(desc(F1)) %>% filter(row_number() == 1) %>% ungroup()
-
 
 
 # rank programs 
@@ -30,7 +33,7 @@ ranked_progs = max_F1_data  %>% group_by(prog) %>% summarize(mean_F1 = mean(F1))
 
 max_F1_data$prog = factor(max_F1_data$prog, levels=ranked_progs$prog)
 
-max_F1_data$analysisType = factor(max_F1_data$analysisType, levels=c('strict', 'allow_reverse', 'allow_revNparalogs'))
+max_F1_data$analysisType = factor(max_F1_data$analysisType, levels=c('strict', 'strict_allow_paralog_results', 'allow_reverse', 'allow_revNparalogs'))
 
 
 # barplot
