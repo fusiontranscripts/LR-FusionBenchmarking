@@ -5,6 +5,9 @@ library(tidyverse)
 strict_results = read.table("__analyze_strict/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
 strict_results$analysisType="strict"
 
+strict_and_paralogs_results = read.table("__analyze_strict_and_paralogs/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
+strict_and_paralogs_results$analysisType="strict_and_paralogs"
+
 allow_reverse_results = read.table("__analyze_allow_reverse/combined_results.PR_AUC.tsv", header=T, sep="\t", stringsAsFactors = F)
 allow_reverse_results$analysisType="allow_reverse"
 
@@ -12,6 +15,7 @@ allow_revNparalogs_results = read.table("__analyze_allow_rev_and_paralogs/combin
 allow_revNparalogs_results$analysisType="allow_revNparalogs"
 
 data = bind_rows(strict_results,
+                 strict_and_paralogs_results,
                  allow_reverse_results,
                  allow_revNparalogs_results)
 
@@ -35,7 +39,7 @@ ranked_progs = mean_AUC_data  %>% group_by(prog) %>% summarize(mean_mean_AUC = m
 
 mean_AUC_data$prog = factor(mean_AUC_data$prog, levels=ranked_progs$prog)
 
-mean_AUC_data$analysisType = factor(mean_AUC_data$analysisType, levels=c('strict', 'allow_reverse', 'allow_revNparalogs'))
+mean_AUC_data$analysisType = factor(mean_AUC_data$analysisType, levels=c('strict', 'strict_and_paralogs', 'allow_reverse', 'allow_revNparalogs'))
 
 
 mean_AUC_data = mean_AUC_data %>% arrange(analysisType, coverage_level, pass_count, desc(mean_AUC))

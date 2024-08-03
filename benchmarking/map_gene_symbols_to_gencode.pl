@@ -62,7 +62,10 @@ main: {
 
 
     my $delim_writer = new DelimParser::Writer(*STDOUT, "\t", [@column_headers, "mapped_gencode_A_gene_list", "mapped_gencode_B_gene_list"]);
-
+    
+    open (my $ofh_excluded, ">$preds_collected_file.excluded") or die $!;
+    my $excluded_delim_writer = new DelimParser::Writer($ofh_excluded, "\t", [@column_headers, "reason_excluded"]);
+    
     my %counts_of_excluded_entries;
     
     while (my $row = $delim_parser->get_row()) {
@@ -75,6 +78,7 @@ main: {
         if ($geneA =~ /$EXCLUDE_LIST/ || $geneB =~ /$EXCLUDE_LIST/) {
             # print STDERR "-excluding: " . join("\t", $row->{sample}, $row->{prog}, $fusion_name) . "\n";
 
+            $row->{reason_excluded} = "missing representation in gencode for geneA or geneB.  geneA ($geneA) or  geneB ($geneB) is in exclude list: $EXCLUDE_LIST ";
             $counts_of_excluded_entries{ $row->{prog} } ++;
             
             next;
@@ -88,6 +92,9 @@ main: {
         if ($gencode_A_genes eq "." || $gencode_B_genes eq ".") {
             #print STDERR "-skipping prediction due to excluding gene symbol pair: " . join("\t", $row->{sample}, $row->{prog}, $fusion_name) . "\n";
             $counts_of_excluded_entries{ $row->{prog} } ++;
+
+            $row->{reason_excluded} = "missing representation in gencode for geneA or geneB.  geneA ($geneA) -> $gencode_A_genes and geneB ($geneB) -> $gencode_B_genes";
+            $excluded_delim_writer->write_row($row);
             next;
         }
         
@@ -217,7 +224,7 @@ sub __map_genes {
     }
     
 
-    my %overlapping_genes;
+    my %overlapping_genes = ($gene_id => 1); # init with gene_id
     
     foreach my $gene_struct (@$gene_structs_aref) {
 

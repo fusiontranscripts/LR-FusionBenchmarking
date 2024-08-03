@@ -90,6 +90,14 @@ main: {
                     'analyze_strict', 
                     { allow_reverse_fusion => 0, allow_paralogs => 0 },
                     $column_headers_aref);
+
+    # score strictly but allow paralogs
+    &score_and_plot($sample_to_fusion_preds_href, 
+                    $sample_to_truth_href, 
+                    'analyze_strict_and_paralogs', 
+                    { allow_reverse_fusion => 0, allow_paralogs => 1 },
+                    $column_headers_aref);
+
     
     # score allow reverse fusion
     &score_and_plot($sample_to_fusion_preds_href, 
