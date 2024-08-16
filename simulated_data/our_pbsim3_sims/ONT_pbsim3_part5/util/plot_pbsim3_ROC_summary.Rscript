@@ -1,0 +1,54 @@
+#!/usr/bin/env Rscript
+
+library(tidyverse)
+
+ROC_file_listing = read.table("ROC.files.list", header=F)[,1]
+
+seqtype_divergence = sapply(ROC_file_listing, function(x) { str_split(x, "/")[[1]][2]}) 
+
+coverage_level = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][1]}) 
+sample_count = sapply(seqtype_divergence, function(x) { str_split(x, "_")[[1]][2]})
+
+ROC_file_listing = data_frame(coverage_level=coverage_level, sample_count=sample_count, filename=ROC_file_listing)
+
+all_data = NULL
+
+for (fname in ROC_file_listing$filename) {
+    
+    df = read.table(fname, sep="\t", stringsAsFactors = F, header=T)    
+    df$filename = fname
+    all_data = bind_rows(all_data, df)
+}
+
+all_data = full_join(ROC_file_listing, all_data, by='filename')
+
+all_data = all_data %>% select(-filename)
+
+write.table(all_data, file = "combined_results.ROC.tsv", sep="\t", row.names=F, quote=F)
+
+
+p = all_data %>% ggplot(aes(x=min_sum_frags, y=F1)) + geom_line(aes(color=prog, group=prog)) + facet_wrap(~coverage_level) +
+    xlim(0,20) +
+    ggtitle("F1 ~ min_reads")
+
+ggsave(p, file="F1~min_reads.plot.pdf", width=10, height=8) 
+
+
+p = all_data %>%  ggplot(aes(x=min_sum_frags, y=TP)) + 
+    geom_point(aes(color=prog), size=rel(0.4)) + 
+    geom_line(aes(group=prog, color=prog)) +
+    facet_wrap( ~coverage_level) +
+    ggtitle("TP ~ min_reads") + xlim(0,10)
+
+ggsave(p, file="TP~min_reads.plot.pdf", width=10, height=8) 
+
+
+p = all_data %>%  ggplot(aes(x=min_sum_frags, y=FP)) + 
+    geom_point(aes(color=prog), size=rel(0.4)) + 
+    geom_line(aes(group=prog, color=prog)) +
+    facet_wrap(~coverage_level) +
+    ggtitle("FP ~ min_reads") + xlim(0,10)
+
+ggsave(p, file="FP~min_reads.plot.pdf", width=10, height=8)
+
+
