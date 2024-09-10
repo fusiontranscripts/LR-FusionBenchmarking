@@ -13,6 +13,10 @@ use DelimParser;
 use Getopt::Long qw(:config posix_default no_ignore_case bundling pass_through);
 
 
+my $RESTRICT_FUZZY_BREAKPOINTS = 0;
+if ($ARGV[0] =~ /FUZZY/) {
+    $RESTRICT_FUZZY_BREAKPOINTS = 1;
+}
 
 my $MIN_READ_SUPPORT = 1;
 
@@ -53,12 +57,24 @@ main: {
     $cmd = "./util/collect_LR_preds.pl fusion_result_file_listing.dat > preds.collected";
     $pipeliner->add_commands(new Command($cmd, "collect_preds.ok"));
 
-   
+    my $preds_file_use = "preds.collected";
+    
+
+     if ($RESTRICT_FUZZY_BREAKPOINTS) {
+        # filter allow for fuzzy breakpoints only
+        $cmd = "./util/filter_require_fuzzy_breakpoint.py preds.collected > preds.collected.fuzzy_ok";
+        $pipeliner->add_commands(new Command($cmd, "fuzzy_filter.ok"));
+
+        $preds_file_use = "preds.collected.fuzzy_ok";
+    }
+    
+       
     # map fusion predictions to gencode gene symbols based on identifiers or chromosomal coordinates.
     $cmd = "$benchmark_toolkit_basedir/map_gene_symbols_to_gencode.pl "
-        . " preds.collected "
+        . " $preds_file_use "
         . " $benchmark_data_basedir/resources/genes.coords.gz "
         . " > preds.collected.gencode_mapped ";
+
     
     $pipeliner->add_commands(new Command($cmd, "gencode_mapped.ok"));
 
