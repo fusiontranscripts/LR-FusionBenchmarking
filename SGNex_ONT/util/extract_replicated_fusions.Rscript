@@ -1,0 +1,53 @@
+#!/usr/bin/env Rscript
+
+library(tidyverse)
+        
+args<-commandArgs(TRUE)
+    
+if (length(args) == 0) {
+    stop("require param: preds_collected.txt")
+}
+    
+preds_file = args[1]
+
+data = read.csv(preds_file, header=T, sep="\t", stringsAsFactors=F)
+
+data$core_sample_name = sapply(data$sample, function(x) { str_split(x, "_")[[1]][2] } )
+
+
+# use lex-sorted fusion name
+
+make_lex_sorted_fusion_name = function(core_sample_name, fusion_name) {
+    
+    sorted_gene_pair = sort(str_split(fusion_name,"--")[[1]])
+    
+    lex_sorted_fusion_name = paste0(core_sample_name, "|", sorted_gene_pair[1], "--", sorted_gene_pair[2])
+    
+    return(lex_sorted_fusion_name)
+}
+
+data = data %>% rowwise() %>% mutate(lex_sorted_fusion_name = make_lex_sorted_fusion_name(core_sample_name, fusion))
+
+
+    
+
+reproducible_fusion_calls = data %>% select(core_sample_name, lex_sorted_fusion_name, sample, prog) %>% unique() %>%
+    group_by(core_sample_name, lex_sorted_fusion_name, prog) %>%
+    filter(n() > 1)
+
+
+data = left_join(reproducible_fusion_calls, data)
+
+    
+    
+data = data %>% group_by(core_sample_name, prog, fusion, breakpoint) %>% summarize(sum_reads = sum(num_reads)) %>%
+    rename(num_reads = sum_reads, sample = core_sample_name) %>%
+    select(sample, prog, fusion, breakpoint, num_reads) %>%
+    arrange(sample, prog, desc(num_reads))
+
+write.table(data, sep="\t", quote=F, row.names=F)
+
+
+quit(save = "no", status = 0, runLast = FALSE)
+
+    
