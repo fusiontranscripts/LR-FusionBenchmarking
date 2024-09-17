@@ -14,6 +14,7 @@ data = read.csv(preds_file, header=T, sep="\t", stringsAsFactors=F)
 
 data$core_sample_name = sapply(data$sample, function(x) { str_split(x, "_")[[1]][2] } )
 
+data$replicate_name =  sapply(data$sample, function(x) { str_split(x, "_run")[[1]][1] } ) 
 
 # use lex-sorted fusion name
 
@@ -31,7 +32,7 @@ data = data %>% rowwise() %>% mutate(lex_sorted_fusion_name = make_lex_sorted_fu
 
     
 
-reproducible_fusion_calls = data %>% select(core_sample_name, lex_sorted_fusion_name, sample, prog) %>% unique() %>%
+reproducible_fusion_calls = data %>% select(core_sample_name, replicate_name, lex_sorted_fusion_name, prog) %>% unique() %>%
     group_by(core_sample_name, lex_sorted_fusion_name, prog) %>%
     filter(n() > 1)
 
