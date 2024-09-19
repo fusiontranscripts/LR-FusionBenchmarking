@@ -1,10 +1,3 @@
-./analyze_SGNex_Venn.pl --min_read_support 1 --restrict_fuzzy_breakpoints
-
-./SGNEx-analyze_Illum_as_TP_unique_as_FP.pl
-
-
-
-
 
 # CDNA ONT: https://app.terra.bio/#workspaces/methods-dev-lab/LR_Fusion_Benchmarking/job_history/303dd595-f129-41ba-a28d-b0b0a0071e53
 
