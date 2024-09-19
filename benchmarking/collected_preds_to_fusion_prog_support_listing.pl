@@ -65,7 +65,7 @@ main: {
         my $sample_fusion_name = $row->{sample_fusion_name};
         my ($geneA, $geneB) = split(/--/, $fusion_name);
         my $mapped_gencode_A_gene_list = $row->{mapped_gencode_A_gene_list};
-        my $mapped_gencode_B_gene_list = $row->{mapped_gencode_A_gene_list};
+        my $mapped_gencode_B_gene_list = $row->{mapped_gencode_B_gene_list};
         
         my $recip_sample_fusion_name = "$sample_name|$geneB--$geneA";
         

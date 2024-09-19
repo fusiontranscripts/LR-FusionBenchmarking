@@ -5,7 +5,7 @@ use warnings;
 use FindBin;
 use lib ("$FindBin::Bin/../../PerlLib");
 use DelimParser;
-
+use Data::Dumper;
 
 my $usage = "\n\n\tusage: $0 fusion_preds.collected progs_to_consider.txt validated_fusions.txt\n\n";
 
@@ -33,10 +33,14 @@ main: {
     my %validated_fusion_pairs;
     {
         open(my $fh, $validated_fusions_file) or die $!;
-        while(<$fh>) {
-            chomp;
-            my ($sample, $fusion_name) = split(/\|/);
+        my $delim_parser = new DelimParser::Reader($fh, "\t");
+        
+        while(my $row = $delim_parser->get_row()) {
+            my $lex_sorted_fusion_name = $row->{'lex_sorted_fusion_name'} or die "Error, no lex_sorted_fusion_name column in truth fusion set";
+            my ($sample, $fusion_name) = split(/\|/, $lex_sorted_fusion_name);
             $validated_fusion_pairs{$fusion_name} = 1;
+            $validated_fusion_pairs{$lex_sorted_fusion_name} = 1;
+            #print STDERR "validated fusion: [$fusion_name]\n";
         }
     }
     
@@ -67,14 +71,18 @@ main: {
     
     ## define fusion proxy name 
     foreach my $row (@rows) {
+
+
+        #print STDERR Dumper($row);
+
         my $sample_name = $row->{sample};
         my $prog = $row->{prog};
         my $fusion_name = $row->{fusion};
         my $sample_fusion_name = $row->{sample_fusion_name};
         my ($geneA, $geneB) = split(/--/, $fusion_name);
-        my $mapped_gencode_A_gene_list = $row->{mapped_gencode_A_gene_list};
-        my $mapped_gencode_B_gene_list = $row->{mapped_gencode_A_gene_list};
-
+        my $mapped_gencode_A_gene_list = $row->{mapped_gencode_A_gene_list} or die $!;
+        my $mapped_gencode_B_gene_list = $row->{mapped_gencode_B_gene_list} or die $!;
+        
         my $recip_fusion_name = "$geneB--$geneA";
         my $recip_sample_fusion_name = "$sample_name|$geneB--$geneA";
         
@@ -84,6 +92,8 @@ main: {
         my $proxy_fusion_name;
         my $proxy_fusion_type;
 
+        
+        
         # check validated
         if (exists($validated_fusion_pairs{$fusion_name})) {
             $proxy_fusion_name = $sample_fusion_name;
@@ -93,7 +103,12 @@ main: {
             $proxy_fusion_name = $recip_sample_fusion_name;
             $proxy_fusion_type = "recip_known_validated";
         }
-                
+
+        elsif(my $gencode_mapped_validated_fusion_name = &search_mapped_gencode_for_validated_fusion($sample_name, $mapped_gencode_A_gene_list, $mapped_gencode_B_gene_list, \%validated_fusion_pairs)) {
+            $proxy_fusion_name = $gencode_mapped_validated_fusion_name;
+            $proxy_fusion_type = "gencode_mapped_to_validated_pair";
+        }
+        
         # check tie
         elsif ($count_progs_sample_fusion_name == $count_progs_recip_sample_fusion_name) {
             $proxy_fusion_name = ($sample_fusion_name lt $recip_sample_fusion_name) ? $sample_fusion_name : $recip_sample_fusion_name;
@@ -245,4 +260,35 @@ sub examine_overlapping_genes_for_fusion_name {
     }
     
     return($best_name);
+}
+
+
+####
+sub search_mapped_gencode_for_validated_fusion {
+    my ($sample_name, $mapped_gencode_A_gene_list, $mapped_gencode_B_gene_list, $validated_fusion_pairs_href) = @_;
+
+    #print STDERR ("Searching mapped gencode for validated fusion\n");
+    
+    my @gencode_A = split(/,/, $mapped_gencode_A_gene_list);
+    my @gencode_B = split(/,/, $mapped_gencode_B_gene_list);
+
+    foreach my $gene_A (@gencode_A) {
+
+        foreach my $gene_B (@gencode_B) {
+
+            my $fusion_pair_forward = "$sample_name|$gene_A--$gene_B";
+            #print STDERR "Checking: $fusion_pair_forward\n";
+            if (exists ($validated_fusion_pairs_href->{$fusion_pair_forward}) ) {
+                return($fusion_pair_forward);
+            }
+            
+            my $fusion_pair_reverse = "$sample_name|$gene_B--$gene_A";
+            #print STDERR "Checking: $fusion_pair_reverse\n";
+            if (exists ($validated_fusion_pairs_href->{$fusion_pair_reverse}) ) {
+                return($fusion_pair_reverse);
+            }
+        }
+    }
+
+    return;
 }
