@@ -1,10 +1,10 @@
-just_LR_preds_no_Illumina:
+just_LR_preds_no_Illumina: clean
 	./analyze_cancer_data.pl  --min_read_support 3 # run with different values to explore different truth sets accordingly.
 
 
 
-# first, run "./analyze_cancer_data.pl  --min_read_support 1" before illum_TP_uniq_FP
-illum_TP_uniq_FP:
+illum_TP_uniq_FP: clean
+	./analyze_cancer_data.pl  --min_read_support 1
 	./analyze_Illum_as_TP_unique_as_FP.pl either
 	./analyze_Illum_as_TP_unique_as_FP.pl arriba,starF
 	./analyze_Illum_as_TP_unique_as_FP.pl arriba
