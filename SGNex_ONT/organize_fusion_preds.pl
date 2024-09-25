@@ -130,7 +130,7 @@ main: {
     $pipeliner->add_commands(new Command($cmd, "filter_messy.ok"));
     
     # capture counts of progs agree: (also writes $preds_file.proxy_assignments ) with proxy fusion selected.
-    my $cmd = "./util/SGNex_collected_preds_to_fusion_prog_support_listing.pl preds.collected.gencode_mapped.wAnnot.filt.pass progs_select.txt SGNEx-as_truth_fusions.lex_ordered.tsv > preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments.byProgAgree";
+    $cmd = "./util/SGNex_collected_preds_to_fusion_prog_support_listing.pl preds.collected.gencode_mapped.wAnnot.filt.pass progs_select.txt SGNEx-as_truth_fusions.lex_ordered.tsv > preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments.byProgAgree";
     $pipeliner->add_commands(new Command($cmd, "byProgAgree.ok"));
         
     
