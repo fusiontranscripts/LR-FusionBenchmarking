@@ -6,6 +6,7 @@ use FindBin;
 use lib ("$FindBin::Bin/../PerlLib");
 use DelimParser;
 use Data::Dumper;
+use Carp;
 
 use Getopt::Long qw(:config posix_default no_ignore_case bundling pass_through);
 
@@ -130,16 +131,26 @@ main : {
         $prog_names{$prog_name} = 1;
         
         my ($geneA, $geneB) = split(/--/, $fusion_name);
+
+        unless ($geneA && $geneB) {
+            confess "Error, not extracting geneA and geneB from fusion name: $fusion_name " . Dumper($row);
+        }
         
         my @partnersA = ($geneA);
         my @partnersB = ($geneB);
         
         foreach my $ele (split(/,/, $mapped_A_list)) {
+            if (! defined($ele)) {
+                confess "Error with mapped_A_list in row: " . Dumper($row);
+            }
             if ($ele && ! grep { $_ eq $ele } @partnersA) {
                 push (@partnersA, $ele);
             }
         }
         foreach my $ele (split(/,/, $mapped_B_list)) {
+            if (! defined($ele) ) {
+                confess "Error with mapped_B_list in row: " . Dumper($row);
+            }
             if ($ele && ! grep { $_ eq $ele } @partnersB) {
                 push (@partnersB, $ele);
             }
