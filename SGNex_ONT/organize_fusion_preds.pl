@@ -98,17 +98,6 @@ main: {
 
     my $preds_file_use = "preds.collected.reproducible";
 
-    
-
-    if ($RESTRICT_FUZZY_BREAKPOINTS) {
-        # filter allow for fuzzy breakpoints only
-        $cmd = "./util/filter_require_fuzzy_breakpoint.py $preds_file_use > $preds_file_use.fuzzy_ok";
-        $pipeliner->add_commands(new Command($cmd, "fuzzy_filter.ok"));
-
-        $preds_file_use = "$preds_file_use.fuzzy_ok";
-    }
-    
-       
     # map fusion predictions to gencode gene symbols based on identifiers or chromosomal coordinates.
     $cmd = "$benchmark_toolkit_basedir/map_gene_symbols_to_gencode.pl "
         . " $preds_file_use "
@@ -133,6 +122,17 @@ main: {
     my $cmd = "./util/SGNex_collected_preds_to_fusion_prog_support_listing.pl preds.collected.gencode_mapped.wAnnot.filt.pass progs_select.txt SGNEx-as_truth_fusions.lex_ordered.tsv > preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments.byProgAgree";
     $pipeliner->add_commands(new Command($cmd, "byProgAgree.ok"));
         
+
+    if ($RESTRICT_FUZZY_BREAKPOINTS) {
+        # filter allow for fuzzy breakpoints only
+        $cmd = "./util/filter_require_fuzzy_breakpoint.py preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments > preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments.FUZZY_RESTRICTED";
+        $pipeliner->add_commands(new Command($cmd, "fuzzy_filter.ok"));
+
+        $preds_file_use = "$preds_file_use.fuzzy_ok";
+    }
+    
+       
+
     
     $pipeliner->run();
     

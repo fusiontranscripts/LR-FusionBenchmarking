@@ -24,10 +24,16 @@ my $SUPPORTED_TRUTH_SET = &ensure_full_path("SGNEx-as_truth_fusions.lex_ordered.
 
 main: {
     
+    my $usage = "usage: $0 fusion_preds.filtered.tsv illum_pred_type['arriba,starF','arriba','starF','either']";
+    unless (scalar(@ARGV) == 2) {
+        die $usage;
+    }
+    my $input_file = $ARGV[0];
+    my $illum_pred_type = $ARGV[1];
     
-    my $input_file = "preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments";
+    #my $input_file = "preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments";
     $input_file = &ensure_full_path($input_file);
-
+    
     my $prog_agree_listing = "preds.collected.gencode_mapped.wAnnot.filt.pass.proxy_assignments.byProgAgree";
     $prog_agree_listing = &ensure_full_path($prog_agree_listing);
         
@@ -35,7 +41,7 @@ main: {
 
     my $analysis_token = "valid_set_TP_uniq_FP";
     
-    my $workdir = "__" . "$analysis_token";
+    my $workdir = "__" . "$analysis_token.$illum_pred_type";
 
     unless (-d $workdir) {
         mkdir ($workdir) or die "Error, cannot mkdir $workdir";
@@ -53,7 +59,18 @@ main: {
             my $delim_parser = new DelimParser::Reader($fh, "\t");
             while(my $row = $delim_parser->get_row()) {
                 my $truth_fusion = $row->{'lex_sorted_fusion_name'} or die "Error, no lex_sorted_fusion_name found: " . Dumper($row);
-                $truth_fusions{$truth_fusion} = 1;
+                my $misc_illumina = join(",", $row->{matched_illumina}, $row->{other_illumina});
+                if ($row->{validated_fusion} eq "TRUE"
+                    ||
+                    ($illum_pred_type eq "either" && $misc_illumina  ne "NA,NA")
+                    ||
+                    # intersection type
+                    ( ($illum_pred_type =~ /,/) && ($row->{matched_illumina} eq $illum_pred_type || $row->{other_illumina} eq $illum_pred_type) )
+                    ||
+                    $misc_illumina =~ /$illum_pred_type/)
+                {
+                    $truth_fusions{$truth_fusion} = 1;
+                }
             }
         }
         
