@@ -12,14 +12,26 @@ import numpy as np
 import argparse
 
 
-
 def main():
 
-    parser = argparse.ArgumentParser(description="assign TP, FP, and FN pred_class for fusions based on breakpoints", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description="assign TP, FP, and FN pred_class for fusions based on breakpoints",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
-    parser.add_argument("--truth_fusions", type=str, required=True, help="truth fusions")
-    parser.add_argument("--pred_fusions", type=str, required=True, help="predicted fusions")
-    parser.add_argument("--max_dist", type=int, required=False, help="maximum allowed distance from known breakpoints", default=0)
+    parser.add_argument(
+        "--truth_fusions", type=str, required=True, help="truth fusions"
+    )
+    parser.add_argument(
+        "--pred_fusions", type=str, required=True, help="predicted fusions"
+    )
+    parser.add_argument(
+        "--max_dist",
+        type=int,
+        required=False,
+        help="maximum allowed distance from known breakpoints",
+        default=0,
+    )
 
     args = parser.parse_args()
 
@@ -28,105 +40,131 @@ def main():
     max_dist = args.max_dist
 
     truth_fusions_df = pd.read_csv(truth_fusions, sep="\t")
-    truth_fusions_df['truth_lexsort_breakpoint'] = truth_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
-    truth_fusions_df.rename(columns={'fusion_name' : 'truth_fusion_name',
-                                     'breakpoint' : 'truth_breakpoint',
-                                     'num_reads' : 'truth_num_reads'},
-                            inplace=True)
+    truth_fusions_df["truth_lexsort_breakpoint"] = truth_fusions_df["breakpoint"].apply(
+        lambda x: "--".join(sorted(x.split("--")))
+    )
+    truth_fusions_df.rename(
+        columns={
+            "fusion_name": "truth_fusion_name",
+            "breakpoint": "truth_breakpoint",
+            "num_reads": "truth_num_reads",
+        },
+        inplace=True,
+    )
 
-    
     pred_fusions_df = pd.read_csv(pred_fusions, sep="\t")
-    pred_fusions_df['pred_lexsort_breakpoint'] = pred_fusions_df['breakpoint'].apply(lambda x: "--".join(sorted(x.split("--"))))
-
+    pred_fusions_df["pred_lexsort_breakpoint"] = pred_fusions_df["breakpoint"].apply(
+        lambda x: "--".join(sorted(x.split("--")))
+    )
 
     ## should only be one sample type!
-    assert len(pred_fusions_df['sample'].unique()) == 1, "Error, num samples != 1 "
-    sample_name = pred_fusions_df['sample'].unique()[0]
+    assert len(pred_fusions_df["sample"].unique()) == 1, "Error, num samples != 1 "
+    sample_name = pred_fusions_df["sample"].unique()[0]
 
-    #must copy the truth set for each program to be analyzed separately so FNs show up in each case.
+    # must copy the truth set for each program to be analyzed separately so FNs show up in each case.
     all_results_df = None
-    progs = pred_fusions_df['prog'].unique()
-    truth_breakpoints = truth_fusions_df['truth_lexsort_breakpoint']
+    progs = pred_fusions_df["prog"].unique()
+    truth_breakpoints = truth_fusions_df["truth_lexsort_breakpoint"]
     for prog in progs:
 
-        prog_pred_fusions_df = pred_fusions_df[ pred_fusions_df['prog'] == prog ]
+        prog_pred_fusions_df = pred_fusions_df[pred_fusions_df["prog"] == prog]
 
-        prog_pred_fusions_brkpts = prog_pred_fusions_df['pred_lexsort_breakpoint']
+        prog_pred_fusions_brkpts = prog_pred_fusions_df["pred_lexsort_breakpoint"]
 
-        results_df = overlap_breakpoints(truth_breakpoints, prog_pred_fusions_brkpts, max_dist)
+        results_df = overlap_breakpoints(
+            truth_breakpoints, prog_pred_fusions_brkpts, max_dist
+        )
 
         # merge in truth info
-        results_df = pd.merge(results_df, truth_fusions_df, left_on='truth_brkpts', right_on='truth_lexsort_breakpoint', how='outer')
+        results_df = pd.merge(
+            results_df,
+            truth_fusions_df,
+            left_on="truth_brkpts",
+            right_on="truth_lexsort_breakpoint",
+            how="outer",
+        )
         # merge in pred info
-        results_df = pd.merge(results_df, prog_pred_fusions_df, left_on='pred_brkpts', right_on='pred_lexsort_breakpoint', how='outer')
+        results_df = pd.merge(
+            results_df,
+            prog_pred_fusions_df,
+            left_on="pred_brkpts",
+            right_on="pred_lexsort_breakpoint",
+            how="outer",
+        )
 
-        results_df['prog'] = prog # ensure in all entries for FNs (unmatched truth)
-        results_df['sample'] = sample_name
-        
+        results_df["prog"] = prog  # ensure in all entries for FNs (unmatched truth)
+        results_df["sample"] = sample_name
+
         if all_results_df is None:
             all_results_df = results_df
         else:
             all_results_df = pd.concat([all_results_df, results_df])
-    
 
     def assign_TP_FN(df_slice):
 
-        df_slice.sort_values('num_reads', ascending=False, inplace=True)
-        
+        df_slice.sort_values("num_reads", ascending=False, inplace=True)
+
         categories = list()
         for _, row in df_slice.iterrows():
-            if pd.isnull(row['pred_brkpts']):
-                categories.append('FN')
+            if pd.isnull(row["pred_brkpts"]):
+                categories.append("FN")
             else:
-                categories.append('TP')
+                categories.append("TP")
 
         # only score each breakpoint once.
         if len(categories) > 1:
-            categories[1:] = ["NA_" + x for x in categories[1:] ]
+            categories[1:] = ["NA_" + x for x in categories[1:]]
 
-        df_slice['pred_class'] = categories
+        df_slice["pred_class"] = categories
 
         return df_slice
 
-
-
     # those without matched truth fusions are labeled FPs.
-    FP_results_df = all_results_df[ all_results_df['truth_brkpts'].isnull() ].drop_duplicates().copy()
-    FP_results_df['pred_class'] = 'FP'
+    FP_results_df = (
+        all_results_df[all_results_df["truth_brkpts"].isnull()].drop_duplicates().copy()
+    )
+    FP_results_df["pred_class"] = "FP"
 
-    TP_FN_results = all_results_df[ ~ all_results_df['truth_brkpts'].isnull() ].groupby(['prog', 'truth_brkpts']).apply(assign_TP_FN)
-    
+    TP_FN_results = (
+        all_results_df[~all_results_df["truth_brkpts"].isnull()]
+        .groupby(["prog", "truth_brkpts"])
+        .apply(assign_TP_FN)
+    )
+
     all_results_df = pd.concat([TP_FN_results, FP_results_df])
 
-    all_results_df.sort_values(['prog', 'truth_brkpts', 'num_reads', 'pred_class'], ascending=[True, True, False, True], inplace=True)
-    
+    all_results_df.sort_values(
+        ["prog", "truth_brkpts", "num_reads", "pred_class"],
+        ascending=[True, True, False, True],
+        inplace=True,
+    )
 
     all_results_df.to_csv(sys.stdout, sep="\t", index=False)
-    
+
     sys.exit(0)
 
 
 # methods based on Alvin's code:
 
+
 def get_genes_to_breakpts(
-        breakpoint_pairs, max_breakpoints_distance
-    ) -> tuple[dict[Any, Any], dict[Any, Any]]:
-        
+    breakpoint_pairs, max_breakpoints_distance
+) -> tuple[dict[Any, Any], dict[Any, Any]]:
+
     left_trees_dict: dict[Any, Any] = {}
     right_trees_dict: dict[Any, Any] = {}
 
-    
     # chr12:52846197--chr17:9981884
     for index, breakpt in enumerate(breakpoint_pairs):
         if not re.search("^chr[^\\:]+:\\d+--chr[^\\:]+:\\d+$", breakpt):
             warnings.warn(f"{breakpt} lacks expected formatting. Skipping.", Warning)
             continue
-            
+
         left, right = breakpt.split("--")
-        #print(left); print(right)
+        # print(left); print(right)
         left = left.split(":")
         right = right.split(":")
-        
+
         if left[0] not in left_trees_dict:
             left_trees_dict[left[0]] = intervaltree.IntervalTree()
 
@@ -148,15 +186,14 @@ def get_genes_to_breakpts(
                 (index, int(right[1])),
             )
         )
-            
+
     return left_trees_dict, right_trees_dict
 
 
-def overlap_breakpoints(gold_standard_breakpts,
-                        predicted_breakpts, 
-                        max_breakpoints_distance=0):
-    
-    
+def overlap_breakpoints(
+    gold_standard_breakpts, predicted_breakpts, max_breakpoints_distance=0
+):
+
     strictly_equal_breakpt = list(
         np.intersect1d(
             np.unique(gold_standard_breakpts),
@@ -177,33 +214,43 @@ def overlap_breakpoints(gold_standard_breakpts,
         np.unique(gold_standard_breakpts),
     )
 
-  
     df = None
-    
+
     if len(strictly_equal_breakpt) > 0:
-        df = pd.DataFrame({ 'truth_brkpts' : strictly_equal_breakpt,
-                            'pred_brkpts' : strictly_equal_breakpt,
-                            'dist_left' : 0,
-                            'dist_right' : 0,
-                            'brkpt_match_type' : 'ExactMatched',
-                          })
+        df = pd.DataFrame(
+            {
+                "truth_brkpts": strictly_equal_breakpt,
+                "pred_brkpts": strictly_equal_breakpt,
+                "dist_left": 0,
+                "dist_right": 0,
+                "brkpt_match_type": "ExactMatched",
+            }
+        )
     if max_breakpoints_distance == 0:
 
         if len(not_found_gold_brkpts) > 0:
-            not_found_gold_brkpts_df = pd.DataFrame({ 'truth_brkpts' : not_found_gold_brkpts,
-                                                       'brkpt_match_type' : 'ExactUnmatched' })
+            not_found_gold_brkpts_df = pd.DataFrame(
+                {
+                    "truth_brkpts": not_found_gold_brkpts,
+                    "brkpt_match_type": "ExactUnmatched",
+                }
+            )
             if df is None:
                 df = not_found_gold_brkpts_df
-            else:  
-                df = pd.concat( [df, not_found_gold_brkpts_df])
+            else:
+                df = pd.concat([df, not_found_gold_brkpts_df])
 
         if len(not_found_prediction_brkpts) > 0:
-            not_found_prediction_brkpts_df = pd.DataFrame({ 'pred_brkpts' : not_found_prediction_brkpts,
-                                                            'brkpt_match_type' : 'ExactUnmatched' })
+            not_found_prediction_brkpts_df = pd.DataFrame(
+                {
+                    "pred_brkpts": not_found_prediction_brkpts,
+                    "brkpt_match_type": "ExactUnmatched",
+                }
+            )
             if df is None:
                 df = not_found_prediction_brkpts_df
             else:
-                df = pd.concat([ df, not_found_prediction_brkpts_df ])
+                df = pd.concat([df, not_found_prediction_brkpts_df])
 
         return df
 
@@ -214,7 +261,7 @@ def overlap_breakpoints(gold_standard_breakpts,
     )
 
     # search the unmatched gold brkpts using the unmatched prediction trees
-    
+
     missing_gold_breakpts = []
     recovered_predicted_brkpts = []
     for gold_breakpt in not_found_gold_brkpts:
@@ -222,26 +269,22 @@ def overlap_breakpoints(gold_standard_breakpts,
         left = left.split(":")
         right = right.split(":")
 
-        if (right[0] not in right_breakpt_tree) or (
-            left[0] not in left_breakpt_tree
-        ):
+        if (right[0] not in right_breakpt_tree) or (left[0] not in left_breakpt_tree):
             # NOTE: skip alternative contigs from liftover
             # If no chromosome matched, use infinity for maximum distances
             # then no fp_distance_list exists
-            warnings.warn(
-                f"Missing one or both chromosome pairs\
-                in the prediction: {left[0]}, {right[0]}!",
-                Warning,
-            )
+            # warnings.warn(
+            #     f"Missing one or both chromosome pairs\
+            #     in the prediction: {left[0]}, {right[0]}!",
+            #     Warning,
+            # )
             missing_gold_breakpts.append(gold_breakpt)
             continue
 
         # left: [chr, start], gold standard left break point
         # left_overlapped_intervals: intervals from interval
         # trees, (start, end, data), data is the breakpoint pair index
-        left_overlapped_intervals = list(
-            left_breakpt_tree[left[0]].at(int(left[1]))
-        )
+        left_overlapped_intervals = list(left_breakpt_tree[left[0]].at(int(left[1])))
         right_overlapped_intervals = list(
             right_breakpt_tree[right[0]].at(int(right[1]))
         )
@@ -267,7 +310,9 @@ def overlap_breakpoints(gold_standard_breakpts,
             for i in left_overlapped_intervals:
                 for j in right_overlapped_intervals:
                     if i.data[0] == j.data[0]:
-                        local_intersected_breakpts.append(not_found_prediction_brkpts[ i.data[0] ])
+                        local_intersected_breakpts.append(
+                            not_found_prediction_brkpts[i.data[0]]
+                        )
                         local_intersected_intervals.append(
                             f"{left[0]}:{i.data[1]}--{right[0]}:{j.data[1]}"
                         )
@@ -287,34 +332,43 @@ def overlap_breakpoints(gold_standard_breakpts,
                 # NOTE: this condition never happen in the simulation
                 warnings.warn(
                     "One gold standard pair match to multiple\
-                    predicted breakpoints after window extension!" + str(local_intersected_intervals),
+                    predicted breakpoints after window extension!"
+                    + str(local_intersected_intervals),
                     Warning,
                     stacklevel=2,
                 )
 
-            df_local = pd.DataFrame({ 'truth_brkpts' : gold_breakpt,
-                                       'pred_brkpts' : local_intersected_breakpts,
-                                       'left_distances' : local_left_distances,
-                                        'right_distances' : local_right_distances,
-                                        'max_distance' :  local_max_distances,
-                                        'brkpt_match_type' : 'InexactMatched'} )
-            
+            df_local = pd.DataFrame(
+                {
+                    "truth_brkpts": gold_breakpt,
+                    "pred_brkpts": local_intersected_breakpts,
+                    "left_distances": local_left_distances,
+                    "right_distances": local_right_distances,
+                    "max_distance": local_max_distances,
+                    "brkpt_match_type": "InexactMatched",
+                }
+            )
+
             recovered_predicted_brkpts.extend(local_intersected_breakpts)
-            
+
             # append matched breakpoints to df
             if df is None:
                 df = df_local
             else:
                 df = pd.concat([df, df_local])
 
-        else: # no overlaps found
+        else:  # no overlaps found
             missing_gold_breakpts.append(gold_breakpt)
 
     missing_gold_brkpts_df = None
     if missing_gold_breakpts:
-        missing_gold_breakpts_df = pd.DataFrame({ 'truth_brkpts' : missing_gold_breakpts,
-                                                  'brkpt_match_type' : 'InexactUnmatched'} )
-        
+        missing_gold_breakpts_df = pd.DataFrame(
+            {
+                "truth_brkpts": missing_gold_breakpts,
+                "brkpt_match_type": "InexactUnmatched",
+            }
+        )
+
         if df is not None:
             df = pd.concat([df, missing_gold_breakpts_df])
         else:
@@ -322,25 +376,26 @@ def overlap_breakpoints(gold_standard_breakpts,
             df = missing_gold_breakpts_df
 
     remaining_unfound_prediction_breakpts = np.setdiff1d(
-        np.unique(not_found_prediction_brkpts),
-        np.unique(recovered_predicted_brkpts) )
+        np.unique(not_found_prediction_brkpts), np.unique(recovered_predicted_brkpts)
+    )
 
     if len(remaining_unfound_prediction_breakpts) > 0:
-        remaining_unfound_prediction_breakpts_df = pd.DataFrame({'pred_brkpts' : remaining_unfound_prediction_breakpts,
-                                                                 'brkpt_match_type' : 'InexactUnmatched'} )
+        remaining_unfound_prediction_breakpts_df = pd.DataFrame(
+            {
+                "pred_brkpts": remaining_unfound_prediction_breakpts,
+                "brkpt_match_type": "InexactUnmatched",
+            }
+        )
         if df is not None:
             df = pd.concat([df, remaining_unfound_prediction_breakpts_df])
         else:
             df = remaining_unfound_prediction_breakpts_df
-            
+
     if total_overlap_count == 0:
         warnings.warn("No breakpoints found even with window extension!")
 
     return df
 
 
-
-
-if __name__=='__main__':
+if __name__ == "__main__":
     main()
-
