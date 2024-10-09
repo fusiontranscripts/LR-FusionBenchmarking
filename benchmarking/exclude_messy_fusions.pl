@@ -93,7 +93,9 @@ exit(0);
 sub examine_for_messy_gene {
     my @genes = @_;
 
-    my @messy;
+    
+
+    my %prog_to_samples;
     
     foreach my $gene (@genes) {
         
@@ -104,19 +106,26 @@ sub examine_for_messy_gene {
                 my @samples = keys %{$gene_to_prog{$gene}->{$prog}};
                 if (scalar(@samples) >= 3) {
                     # and multiple samples
-                    push (@messy, "$gene^$prog^" . join(",", @samples));
+                    push (@{$prog_to_samples{$prog}}, "$gene^$prog^" . join(",", @samples));
                 }
             }
         }
     }
-    
-    if (scalar(@messy) > 1) {
-        # multiple progs, each mult samples
-        
-        return(join(";", @messy));
+
+    # messy if multiple programs each across multiple samples.
+    if (scalar(keys %prog_to_samples) > 1) {
+        # multiple progs and multiple samples
+        my @messy;
+        foreach my $prog_gene_sample_list_aref (values %prog_to_samples) {
+            push (@messy, @$prog_gene_sample_list_aref);
+        };
+        my $messy_report = join(";", @messy);
+        return($messy_report);
     }
-    
     else {
         return;
     }
 }
+
+
+
